@@ -1,0 +1,27 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.Danaloca" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/primaryColor</item>
+        <item name="colorPrimaryVariant">@color/primaryDarkColor</item>
+        <item name="colorOnPrimary">@color/onPrimaryColor</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/secondaryColor</item>
+        <item name="colorSecondaryVariant">@color/secondaryDarkColor</item>
+        <item name="colorOnSecondary">@color/onSecondaryColor</item>
+        <!-- Background color. -->
+        <item name="android:colorBackground">@color/backgroundColor</item>
+        <item name="colorSurface">@color/surfaceColor</item>
+        <item name="colorError">@color/errorColor</item>
+        <item name="colorOnBackground">@color/onBackgroundColor</item>
+        <item name="colorOnSurface">@color/onSurfaceColor</item>
+        <item name="colorOnError">@color/onErrorColor</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <!-- Full screen mode -->
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+    </style>
+
+</resources>

@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "502696016564",
+    "project_id": "danaloca-30331",
+    "storage_bucket": "danaloca-30331.firebasestorage.app",
+    "firebase_url": "https://danaloca-30331-default-rtdb.asia-southeast1.firebasedatabase.app/"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:502696016564:android:f05cbf28e5a1d380d7b5e1",
+        "android_client_info": {
+          "package_name": "com.levy.danaloca"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "502696016564-kh7o364ane51oajfd8j5ieqgisc8ldhb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-qVu-WaUnOXwRE8PJANUi1R3YWJTr3Ws"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "502696016564-kh7o364ane51oajfd8j5ieqgisc8ldhb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
