@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/login_background_gradient"
+    android:background="@drawable/main_background_gradient"
     tools:context=".view.RegisterActivity">
 
     <!-- Semi-transparent overlay for blur effect -->
@@ -236,8 +236,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:background="@android:color/white"
                 android:padding="16dp"
+                android:background="@drawable/rounded_button"
                 android:text="Register"
                 android:textColor="#FFFFFF" />
 
@@ -249,7 +249,7 @@
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="50dp"
                 android:text="@string/login_prompt"
-                android:textColor="#A1A1A1" />
+                android:textColor="#474747" />
 
         </LinearLayout>
     </ScrollView>

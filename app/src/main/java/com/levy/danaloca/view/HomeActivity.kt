@@ -3,23 +3,25 @@ package com.levy.danaloca.view
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.navigation.findNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.levy.danaloca.R
-import com.levy.danaloca.view.fragment.*
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.setupWithNavController
+import np.com.susanthapa.curved_bottom_navigation.CbnMenuItem
+import np.com.susanthapa.curved_bottom_navigation.CurvedBottomNavigationView
 
 class HomeActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
-    private lateinit var bottomNav: BottomNavigationView
+    private lateinit var navView: CurvedBottomNavigationView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
         auth = FirebaseAuth.getInstance()
-        
+
         // Check if user is signed in
         if (auth.currentUser == null) {
             navigateToLogin()
@@ -27,32 +29,42 @@ class HomeActivity : AppCompatActivity() {
         }
 
         setupBottomNavigation()
-        
-        // Set default fragment
-        if (savedInstanceState == null) {
-            loadFragment(HomeFragment())
-        }
     }
 
     private fun setupBottomNavigation() {
-        bottomNav = findViewById(R.id.bottom_navigation)
-        bottomNav.setOnNavigationItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> loadFragment(HomeFragment())
-                R.id.nav_friends -> loadFragment(FriendsFragment())
-                R.id.nav_notifications -> loadFragment(NotificationsFragment())
-                R.id.nav_profile -> loadFragment(ProfileFragment())
-                R.id.nav_settings -> loadFragment(SettingsFragment())
-            }
-            true
-        }
-    }
+        navView = findViewById(R.id.bottom_navigation)
+        val menuItems = arrayOf(
+            CbnMenuItem(
+                R.drawable.ic_notifications,
+                R.drawable.avd_notifications,
+                R.id.nav_notifications
+            ),
+            CbnMenuItem(
+                R.drawable.ic_friends,
+                R.drawable.avd_friends,
+                R.id.nav_friends
+            ),
+            CbnMenuItem(
+                R.drawable.ic_home,
+                R.drawable.avd_home,
+                R.id.nav_home
+            ),
+            CbnMenuItem(
+                R.drawable.ic_profile,
+                R.drawable.avd_profile,
+                R.id.nav_profile
+            ),
+            CbnMenuItem(
+                R.drawable.ic_settings,
+                R.drawable.avd_settings,
+                R.id.nav_settings
+            )
+        )
+        navView.setMenuItems(menuItems, 2)
 
-    private fun loadFragment(fragment: Fragment): Boolean {
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, fragment)
-            .commit()
-        return true
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navController = navHostFragment.navController
+        navView.setupWithNavController(navController)
     }
 
     fun logout() {

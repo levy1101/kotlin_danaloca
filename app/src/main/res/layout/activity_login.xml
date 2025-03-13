@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/login_background_gradient"
+    android:background="@drawable/main_background_gradient"
     tools:context=".view.LoginActivity">
 
     <!-- Semi-transparent overlay for blur effect -->
@@ -110,7 +110,7 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="24dp"
         android:layout_marginTop="24dp"
-        android:background="@android:color/white"
+        android:background="@drawable/rounded_button"
         android:text="Login"
         android:textColor="#FFFFFF"
         android:padding="16dp"
@@ -124,7 +124,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="68dp"
         android:text="@string/register_prompt"
-        android:textColor="#A1A1A1"
+        android:textColor="#474747"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
