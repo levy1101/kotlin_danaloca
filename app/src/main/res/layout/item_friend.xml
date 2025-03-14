@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <!-- User Info -->
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/ivProfile"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/default_avatar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tvUsername"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@id/buttonContainer"
+            app:layout_constraintStart_toEndOf="@id/ivProfile"
+            app:layout_constraintTop_toTopOf="@id/ivProfile"
+            tools:text="Username" />
+
+        <TextView
+            android:id="@+id/tvLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:textColor="#757575"
+            android:textSize="14sp"
+            app:layout_constraintStart_toEndOf="@id/ivProfile"
+            app:layout_constraintTop_toBottomOf="@id/tvUsername"
+            tools:text="Location" />
+
+        <!-- Friend Actions Container -->
+        <FrameLayout
+            android:id="@+id/buttonContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/ivProfile">
+
+            <!-- Add Friend Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAddFriend"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="Add Friend"
+                android:textSize="12sp"
+                android:visibility="gone"
+                app:cornerRadius="20dp"
+                app:icon="@drawable/ic_add"
+                app:iconSize="16dp"
+                tools:visibility="visible" />
+
+            <!-- Cancel Request Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCancelRequest"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="Cancel"
+                android:textSize="12sp"
+                android:visibility="gone"
+                app:cornerRadius="20dp" />
+
+            <!-- Accept/Decline Container -->
+            <LinearLayout
+                android:id="@+id/layoutRequestActions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAccept"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp"
+                    android:text="Accept"
+                    android:textSize="12sp"
+                    app:cornerRadius="20dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDecline"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:text="Decline"
+                    android:textSize="12sp"
+                    app:cornerRadius="20dp" />
+            </LinearLayout>
+
+            <!-- Friends Dropdown -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnFriendOptions"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="Friends"
+                android:textSize="12sp"
+                android:visibility="gone"
+                app:cornerRadius="20dp"
+                app:icon="@drawable/ic_more"
+                app:iconGravity="end"
+                app:strokeColor="#757575"
+                app:strokeWidth="1dp" />
+
+        </FrameLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>
