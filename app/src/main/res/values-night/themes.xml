@@ -22,7 +22,8 @@
         <!-- Full screen mode -->
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
-
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:paddingTop">5dp</item>
     </style>
 
 </resources>
