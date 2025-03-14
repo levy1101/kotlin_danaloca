@@ -21,7 +21,7 @@ import com.levy.danaloca.view.HomeActivity
 class ProfileFragment : Fragment() {
 
     private lateinit var userRepository: UserRepository
-    private var currentUserEmail: String? = null
+    private var currentUserId: String? = null
 
     // UI Elements
     private lateinit var tvFullName: TextView
@@ -43,8 +43,9 @@ class ProfileFragment : Fragment() {
         // Initialize repository
         userRepository = UserRepository()
 
-        // Get current user email
-        currentUserEmail = FirebaseAuth.getInstance().currentUser?.email
+        // Get current user ID from Firebase Auth
+        currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+        Log.d("ProfileFragment", "Current user ID: $currentUserId")
 
         // Initialize UI elements
         initViews(view)
@@ -77,12 +78,13 @@ class ProfileFragment : Fragment() {
     }
 
     private fun loadUserData() {
-        if (currentUserEmail.isNullOrEmpty()) {
+        if (currentUserId.isNullOrEmpty()) {
             showError("User not logged in")
             return
         }
 
-        userRepository.getUser(currentUserEmail!!).addValueEventListener(object : ValueEventListener {
+        Log.d("ProfileFragment", "Loading user data for ID: $currentUserId")
+        userRepository.getUser(currentUserId!!).addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
                     val user = snapshot.getValue(User::class.java)

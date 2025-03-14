@@ -53,18 +53,47 @@ class PostRepository {
         return result
     }
 
-    fun updateLikes(postId: String, newLikeCount: Int): MutableLiveData<Resource<Boolean>> {
+    fun toggleLike(postId: String, userId: String): MutableLiveData<Resource<Boolean>> {
         val result = MutableLiveData<Resource<Boolean>>()
-        
         result.value = Resource.loading(null)
 
-        postsRef.child(postId).child("likes").setValue(newLikeCount)
-            .addOnSuccessListener {
-                result.value = Resource.success(true)
+        val postRef = postsRef.child(postId)
+        
+        postRef.get().addOnSuccessListener { snapshot ->
+            val post = snapshot.getValue(Post::class.java)
+            if (post != null) {
+                val likedUsers = post.likedUsers.toMutableMap()
+                val isLiked = likedUsers.containsKey(userId)
+                
+                if (isLiked) {
+                    // Unlike: Remove user from likedUsers and decrease likes count
+                    likedUsers.remove(userId)
+                    postRef.updateChildren(mapOf(
+                        "likes" to post.likes - 1,
+                        "likedUsers" to likedUsers
+                    )).addOnSuccessListener {
+                        result.value = Resource.success(true)
+                    }.addOnFailureListener { e ->
+                        result.value = Resource.error(e.message ?: "Error updating like status", null)
+                    }
+                } else {
+                    // Like: Add user to likedUsers and increase likes count
+                    likedUsers[userId] = true
+                    postRef.updateChildren(mapOf(
+                        "likes" to post.likes + 1,
+                        "likedUsers" to likedUsers
+                    )).addOnSuccessListener {
+                        result.value = Resource.success(true)
+                    }.addOnFailureListener { e ->
+                        result.value = Resource.error(e.message ?: "Error updating like status", null)
+                    }
+                }
+            } else {
+                result.value = Resource.error("Post not found", null)
             }
-            .addOnFailureListener { e ->
-                result.value = Resource.error(e.message ?: "Error updating likes", null)
-            }
+        }.addOnFailureListener { e ->
+            result.value = Resource.error(e.message ?: "Error fetching post", null)
+        }
 
         return result
     }

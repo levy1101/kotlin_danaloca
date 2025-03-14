@@ -8,7 +8,7 @@ import com.levy.danaloca.repository.PostRepository
 import com.levy.danaloca.utils.Resource
 
 class HomeViewModel : ViewModel() {
-    private val postRepository = PostRepository()
+    private val postViewModel = PostViewModel()
 
     private val posts = MutableLiveData<Resource<List<Post>>>()
     fun getPosts(): LiveData<Resource<List<Post>>> = posts
@@ -24,20 +24,31 @@ class HomeViewModel : ViewModel() {
     }
 
     fun loadPosts() {
-        postRepository.getPosts().observeForever { result ->
+        postViewModel.getPosts()
+        postViewModel.posts.observeForever { result ->
             posts.value = result
         }
     }
 
-    fun likePost(postId: String, currentLikes: Int) {
-        postRepository.updateLikes(postId, currentLikes + 1).observeForever { result ->
+    fun toggleLike(postId: String, userId: String) {
+        postViewModel.toggleLike(postId, userId)
+        postViewModel.likeStatus.observeForever { result ->
             likeUpdateStatus.value = result
         }
     }
 
+    fun isPostLikedByUser(post: Post, userId: String): Boolean {
+        return postViewModel.isPostLikedByUser(post, userId)
+    }
+
     fun deletePost(postId: String) {
-        postRepository.deletePost(postId).observeForever { result ->
-            deleteStatus.value = result
+        deleteStatus.value = Resource.loading(null)
+        posts.value?.data?.find { it.id == postId }?.let { post ->
+            postViewModel.deletePost(postId).observeForever { result ->
+                deleteStatus.value = result
+            }
+        } ?: run {
+            deleteStatus.value = Resource.error("Post not found", null)
         }
     }
 

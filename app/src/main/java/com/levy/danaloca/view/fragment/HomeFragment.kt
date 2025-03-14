@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -19,6 +20,7 @@ import com.levy.danaloca.view.SearchActivity
 import com.levy.danaloca.view.CreatePostActivity
 import com.levy.danaloca.view.MessagesActivity
 import com.levy.danaloca.viewmodel.HomeViewModel
+import com.levy.danaloca.viewmodel.UserViewModel
 
 class HomeFragment : Fragment(), ActionBarFragment.ActionBarListener, PostAdapter.PostListener {
 
@@ -27,6 +29,7 @@ class HomeFragment : Fragment(), ActionBarFragment.ActionBarListener, PostAdapte
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var postAdapter: PostAdapter
     private val viewModel: HomeViewModel by viewModels()
+    private val userViewModel: UserViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -54,7 +57,11 @@ class HomeFragment : Fragment(), ActionBarFragment.ActionBarListener, PostAdapte
     }
 
     private fun setupRecyclerView() {
-        postAdapter = PostAdapter().apply {
+        postAdapter = PostAdapter(
+            lifecycleScope,
+            userViewModel,
+            viewModel
+        ).apply {
             listener = this@HomeFragment
         }
         postsRecyclerView.apply {
@@ -122,7 +129,15 @@ class HomeFragment : Fragment(), ActionBarFragment.ActionBarListener, PostAdapte
 
     // PostListener implementations
     override fun onLikeClicked(post: Post) {
-        viewModel.likePost(post.id, post.likes)
+        userViewModel.getCurrentUser()?.uid?.let { userId ->
+            viewModel.toggleLike(post.id, userId)
+        } ?: run {
+            Toast.makeText(context, "Please sign in to like posts", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun updatePostLikeStatus(post: Post, isLiked: Boolean) {
+        postAdapter.notifyItemChanged(postAdapter.getPostPosition(post))
     }
 
     override fun onCommentClicked(post: Post) {
