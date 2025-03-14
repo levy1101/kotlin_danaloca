@@ -33,6 +33,8 @@ class HomeActivity : AppCompatActivity() {
 
     private fun setupBottomNavigation() {
         navView = findViewById(R.id.bottom_navigation)
+        navView.setBackgroundColor(android.graphics.Color.TRANSPARENT) // Set background to transparent
+
         val menuItems = arrayOf(
             CbnMenuItem(
                 R.drawable.ic_notifications,

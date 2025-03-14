@@ -25,7 +25,37 @@ class PostAdapter(
 ) : RecyclerView.Adapter<PostAdapter.PostViewHolder>() {
 
     private var posts = mutableListOf<Post>()
-    private val dateFormat = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
+    private val dateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault())
+    private val timeFormat = SimpleDateFormat("EEEE, HH:mm", Locale.getDefault())
+    private val monthDayFormat = SimpleDateFormat("MMMM d", Locale.getDefault())
+    private val userNameCache = mutableMapOf<String, String>()  // Cache for usernames
+
+    private fun getFormattedTimestamp(timestamp: Long): String {
+        val now = System.currentTimeMillis()
+        val diff = now - timestamp
+        
+        return when {
+            // Less than 1 minute
+            diff < 60_000 -> "Just now"
+            
+            // Less than 1 hour
+            diff < 3600_000 -> "${diff / 60_000} minutes ago"
+            
+            // Less than 24 hours
+            diff < 86400_000 -> "${diff / 3600_000} hours ago"
+            
+            // This week (less than 7 days)
+            diff < 604800_000 -> timeFormat.format(Date(timestamp))
+            
+            // This year
+            Calendar.getInstance().apply { timeInMillis = timestamp }.get(Calendar.YEAR) ==
+            Calendar.getInstance().apply { timeInMillis = now }.get(Calendar.YEAR) ->
+                monthDayFormat.format(Date(timestamp))
+            
+            // Last year
+            else -> dateFormat.format(Date(timestamp))
+        }
+    }
 
     fun getPostPosition(post: Post): Int {
         return posts.indexOfFirst { it.id == post.id }
@@ -42,6 +72,7 @@ class PostAdapter(
     fun updatePosts(newPosts: List<Post>) {
         posts.clear()
         posts.addAll(newPosts)
+        userNameCache.clear() // Clear the cache when updating all posts
         notifyDataSetChanged()
     }
 
@@ -68,81 +99,76 @@ class PostAdapter(
         private val commentButton: View = itemView.findViewById(R.id.commentButton)
         private val moreButton: ImageButton = itemView.findViewById(R.id.moreButton)
         private val likeIcon: ImageView = itemView.findViewById(R.id.likeIcon)
+    fun bind(post: Post) {
+       Log.d("PostAdapter", "Binding post: ${post.id}, userId: ${post.userId}")
 
-        fun bind(post: Post) {
-           userName.text = "Loading..." // Show loading state
-           
-           Log.d("PostAdapter", "Binding post: ${post.id}, userId: ${post.userId}")
-           
-           if (post.userId.isBlank()) {
-               Log.d("PostAdapter", "UserId is blank, showing Unknown User")
-               userName.text = "Unknown User"
+       if (post.userId.isBlank()) {
+           userName.text = "Unknown User"
+       } else {
+           // First check cache
+           val cachedName = userNameCache[post.userId]
+           if (cachedName != null) {
+               userName.text = cachedName
            } else {
+               // Keep the current text while loading
                lifecycleScope.launch {
                    try {
-                       Log.d("PostAdapter", "Fetching user name for userId: ${post.userId}")
                        val fullName = userViewModel.GetUserFullName(post.userId)
                        Log.d("PostAdapter", "Received fullName: $fullName for userId: ${post.userId}")
-                       
+
+                       // Cache the username
+                       userNameCache[post.userId] = fullName
+
                        // Only update if the ViewHolder is still bound to the same post
                        val position = adapterPosition
                        if (position != RecyclerView.NO_POSITION &&
                            position < posts.size &&
                            posts[position].id == post.id) {
                            userName.text = fullName
-                       } else {
-                           Log.d("PostAdapter", "ViewHolder no longer bound to same post. Skipping update")
                        }
                    } catch (e: Exception) {
                        if (e is CancellationException) throw e
                        Log.e("PostAdapter", "Error loading user name for userId: ${post.userId}", e)
-                       
-                       // Only update if the ViewHolder is still bound to the same post
-                       val position = adapterPosition
-                       if (position != RecyclerView.NO_POSITION &&
-                           position < posts.size &&
-                           posts[position].id == post.id) {
-                           userName.text = "Unknown User"
-                       }
                    }
                }
            }
-           
-           // Set other post details
-           timestamp.text = dateFormat.format(Date(post.timestamp))
-           content.text = post.content
-           likeCount.text = "${post.likes}"
-           commentCount.text = "${post.comments}"
+       }
 
-           // Set up click listeners
-            likeButton.setOnClickListener {
-                listener?.onLikeClicked(post)
-            }
+       // Set other post details
+       timestamp.text = getFormattedTimestamp(post.timestamp)
+       content.text = post.content
+       likeCount.text = "${post.likes}"
+       commentCount.text = "${post.comments}"
 
-            commentButton.setOnClickListener {
-                listener?.onCommentClicked(post)
-            }
+       // Set up click listeners
+       likeButton.setOnClickListener {
+           listener?.onLikeClicked(post)
+       }
 
-            moreButton.setOnClickListener {
-                listener?.onMoreClicked(post)
-            }
+       commentButton.setOnClickListener {
+           listener?.onCommentClicked(post)
+       }
 
-            // Update like icon based on current user's like status
-            lifecycleScope.launch {
-                try {
-                    userViewModel.getCurrentUser()?.uid?.let { currentUserId ->
-                        val isLiked = homeViewModel.isPostLikedByUser(post, currentUserId)
-                        likeIcon.setColorFilter(
-                            itemView.context.getColor(
-                                if (isLiked) R.color.primaryColor else R.color.gray_800
-                            )
-                        )
-                    }
-                } catch (e: Exception) {
-                    if (e is CancellationException) throw e
-                    Log.e("PostAdapter", "Error checking like status", e)
-                }
-            }
-        }
+       moreButton.setOnClickListener {
+           listener?.onMoreClicked(post)
+       }
+
+       // Update like icon based on current user's like status
+       lifecycleScope.launch {
+           try {
+               userViewModel.getCurrentUser()?.uid?.let { currentUserId ->
+                   val isLiked = homeViewModel.isPostLikedByUser(post, currentUserId)
+                   likeIcon.setColorFilter(
+                       itemView.context.getColor(
+                           if (isLiked) R.color.primaryColor else R.color.gray_800
+                       )
+                   )
+               }
+           } catch (e: Exception) {
+               if (e is CancellationException) throw e
+               Log.e("PostAdapter", "Error checking like status", e)
+           }
+       }
     }
+        }
 }
