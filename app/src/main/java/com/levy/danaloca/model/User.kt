@@ -1,7 +1,7 @@
 package com.levy.danaloca.model
 
 data class User(
-    val email: String = "",      // Default values for all properties
+    val email: String = "",
     val fullName: String = "",
     val phoneNumber: String = "",
     val gender: String = "",

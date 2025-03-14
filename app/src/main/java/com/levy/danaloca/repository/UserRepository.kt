@@ -6,35 +6,26 @@ import com.google.firebase.database.FirebaseDatabase
 import com.levy.danaloca.model.User
 
 class UserRepository {
-    private val database: DatabaseReference = FirebaseDatabase.getInstance().reference
-
+    private val database = FirebaseDatabase.getInstance()
+    private val usersRef = database.reference.child("users")
+    
     fun saveUser(user: User): Task<Void> {
-        return database.child("users")
-            .child(user.email.replace(".", "_"))
-            .setValue(user)
-    }
-
-    fun updateUser(email: String, updates: Map<String, Any>): Task<Void> {
-        return database.child("users")
-            .child(email.replace(".", "_"))
-            .updateChildren(updates)
+        return usersRef.child(user.email.replace(".", ",")).setValue(user)
     }
 
     fun getUser(email: String): DatabaseReference {
-        return database.child("users")
-            .child(email.replace(".", "_"))
+        return usersRef.child(email.replace(".", ","))
     }
 
     fun getUserByPhone(phone: String): DatabaseReference {
-        return database.child("users")
-            .orderByChild("phoneNumber")
-            .equalTo(phone)
-            .ref
+        return usersRef.orderByChild("phone").equalTo(phone).ref
+    }
+
+    fun updateUser(email: String, updates: Map<String, Any>): Task<Void> {
+        return usersRef.child(email.replace(".", ",")).updateChildren(updates)
     }
 
     fun deleteUser(email: String): Task<Void> {
-        return database.child("users")
-            .child(email.replace(".", "_"))
-            .removeValue()
+        return usersRef.child(email.replace(".", ",")).removeValue()
     }
 }
