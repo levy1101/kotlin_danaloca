@@ -1,16 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <group
-        android:name="home_group"
-        android:pivotX="12"
-        android:pivotY="12">
-        <path
-            android:name="home_path"
-            android:fillColor="#FFFFFF"
-            android:pathData="M10,20v-6h4v6h5v-8h3L12,3 2,12h3v8z"/>
-    </group>
+    <path
+        android:pathData="m12,3.5 l-10,9h3v8h6v-6h2v6h6v-8h3z"
+        android:strokeLineJoin="round"
+        android:strokeWidth="1.5"
+        android:fillColor="#00000000"
+        android:strokeColor="#000"/>
 </vector>
