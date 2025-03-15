@@ -13,6 +13,7 @@ import com.levy.danaloca.R
 import com.levy.danaloca.model.Post
 import com.levy.danaloca.viewmodel.UserViewModel
 import com.levy.danaloca.viewmodel.HomeViewModel
+import com.levy.danaloca.utils.ImageUtils
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.launch
@@ -99,6 +100,7 @@ class PostAdapter(
         private val commentButton: View = itemView.findViewById(R.id.commentButton)
         private val moreButton: ImageButton = itemView.findViewById(R.id.moreButton)
         private val likeIcon: ImageView = itemView.findViewById(R.id.likeIcon)
+        private val postImage: ImageView = itemView.findViewById(R.id.postImage)
     fun bind(post: Post) {
        Log.d("PostAdapter", "Binding post: ${post.id}, userId: ${post.userId}")
 
@@ -139,6 +141,16 @@ class PostAdapter(
        content.text = post.content
        likeCount.text = "${post.likes}"
        commentCount.text = "${post.comments}"
+
+       // Handle post image
+       if (post.imageBase64.isNotBlank()) {
+           ImageUtils.base64ToBitmap(post.imageBase64)?.let { bitmap ->
+               postImage.setImageBitmap(bitmap)
+               postImage.visibility = View.VISIBLE
+           }
+       } else {
+           postImage.visibility = View.GONE
+       }
 
        // Set up click listeners
        likeButton.setOnClickListener {

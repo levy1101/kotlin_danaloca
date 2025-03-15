@@ -80,17 +80,46 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/appBarLayout">
 
-        <EditText
-            android:id="@+id/contentEditText"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@null"
-            android:gravity="top"
-            android:hint="What's on your mind?"
-            android:padding="16dp"
-            android:textColor="@color/black"
-            android:textColorHint="#757575"
-            android:textSize="16sp" />
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/contentEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@null"
+                android:gravity="top"
+                android:hint="What's on your mind?"
+                android:padding="16dp"
+                android:textColor="@color/black"
+                android:textColorHint="#757575"
+                android:textSize="16sp" />
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/imagePreview"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="16dp"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
+                android:adjustViewBounds="true"
+                app:shapeAppearanceOverlay="@style/RoundedImageView" />
+
+            <ImageButton
+                android:id="@+id/addImageButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_margin="16dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="8dp"
+                android:src="@drawable/ic_add"
+                app:tint="@color/black" />
+
+        </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>
 

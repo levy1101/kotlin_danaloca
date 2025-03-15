@@ -18,13 +18,32 @@ class FriendsRepository(
     fun getFriendRequests(userId: String, callback: (Resource<List<FriendRequest>>) -> Unit) {
         callback(Resource.loading())
 
+        // Create a map to store all requests
+        val allRequests = mutableMapOf<String, FriendRequest>()
+        var receiverLoaded = false
+        var senderLoaded = false
+
+        // Function to notify when both listeners have loaded
+        fun notifyIfComplete() {
+            if (receiverLoaded && senderLoaded) {
+                callback(Resource.success(allRequests.values.toList()))
+            }
+        }
+
+        // Listen for received requests
         friendRequestsRef
             .orderByChild("receiverId")
             .equalTo(userId)
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    val requests = snapshot.children.mapNotNull { it.getValue(FriendRequest::class.java) }
-                    callback(Resource.success(requests))
+                    snapshot.children.forEach {
+                        val request = it.getValue(FriendRequest::class.java)
+                        if (request != null) {
+                            allRequests[request.id] = request
+                        }
+                    }
+                    receiverLoaded = true
+                    notifyIfComplete()
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -32,14 +51,20 @@ class FriendsRepository(
                 }
             })
 
-        // Also listen for sent requests
+        // Listen for sent requests
         friendRequestsRef
             .orderByChild("senderId")
             .equalTo(userId)
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    val requests = snapshot.children.mapNotNull { it.getValue(FriendRequest::class.java) }
-                    callback(Resource.success(requests))
+                    snapshot.children.forEach {
+                        val request = it.getValue(FriendRequest::class.java)
+                        if (request != null) {
+                            allRequests[request.id] = request
+                        }
+                    }
+                    senderLoaded = true
+                    notifyIfComplete()
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -85,7 +110,9 @@ class FriendsRepository(
     }
 
     fun cancelFriendRequest(requestId: String, callback: (Resource<Unit>) -> Unit) {
-        friendRequestsRef.child(requestId).removeValue()
+        // Update status to CANCELED instead of removing
+        friendRequestsRef.child(requestId).child("status")
+            .setValue(FriendRequestStatus.CANCELED)
             .addOnSuccessListener { callback(Resource.success(Unit)) }
             .addOnFailureListener { e -> callback(Resource.error(e.message ?: "Failed to cancel friend request")) }
     }
@@ -94,12 +121,19 @@ class FriendsRepository(
         val updates = hashMapOf<String, Any?>(
             "/users/${request.senderId}/friends/${request.receiverId}" to true,
             "/users/${request.receiverId}/friends/${request.senderId}" to true,
-            "/friend_requests/${request.id}" to null
+            "/friend_requests/${request.id}/status" to FriendRequestStatus.ACCEPTED
         )
         
         database.reference.updateChildren(updates)
             .addOnSuccessListener { callback(Resource.success(Unit)) }
             .addOnFailureListener { e -> callback(Resource.error(e.message ?: "Failed to accept friend request")) }
+    }
+
+    fun declineFriendRequest(requestId: String, callback: (Resource<Unit>) -> Unit) {
+        friendRequestsRef.child(requestId).child("status")
+            .setValue(FriendRequestStatus.DECLINED)
+            .addOnSuccessListener { callback(Resource.success(Unit)) }
+            .addOnFailureListener { e -> callback(Resource.error(e.message ?: "Failed to decline friend request")) }
     }
 
     fun removeFriend(userId: String, friendId: String, callback: (Resource<Unit>) -> Unit) {
@@ -111,18 +145,6 @@ class FriendsRepository(
         database.reference.updateChildren(updates)
             .addOnSuccessListener { callback(Resource.success(Unit)) }
             .addOnFailureListener { e -> callback(Resource.error(e.message ?: "Failed to remove friend")) }
-    }
-
-    fun blockUser(userId: String, blockedUserId: String, callback: (Resource<Unit>) -> Unit) {
-        val updates = hashMapOf<String, Any?>(
-            "/users/$userId/blockedUsers/$blockedUserId" to true,
-            "/users/$userId/friends/$blockedUserId" to null,
-            "/users/$blockedUserId/friends/$userId" to null
-        )
-        
-        database.reference.updateChildren(updates)
-            .addOnSuccessListener { callback(Resource.success(Unit)) }
-            .addOnFailureListener { e -> callback(Resource.error(e.message ?: "Failed to block user")) }
     }
 
     fun unfollowUser(userId: String, friendId: String, callback: (Resource<Unit>) -> Unit) {

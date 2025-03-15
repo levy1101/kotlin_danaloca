@@ -11,6 +11,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="#F0F0F0"
         android:padding="16dp">
 
         <!-- User Info -->
@@ -66,13 +67,26 @@
             android:textSize="14sp"
             app:layout_constraintTop_toBottomOf="@id/userAvatar" />
 
+        <!-- Post Image -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/postImage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:adjustViewBounds="true"
+            android:maxHeight="400dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/content"
+            app:shapeAppearanceOverlay="@style/RoundedImageView" />
+
         <!-- Actions -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/content">
+            app:layout_constraintTop_toBottomOf="@id/postImage">
 
             <!-- Like -->
             <LinearLayout

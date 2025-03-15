@@ -1,13 +1,22 @@
 package com.levy.danaloca.view
 
+import android.Manifest
+import android.app.Activity
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.Button
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.levy.danaloca.R
 import com.levy.danaloca.utils.Status
 import com.levy.danaloca.viewmodel.CreatePostViewModel
@@ -16,8 +25,39 @@ class CreatePostActivity : AppCompatActivity() {
 
     private lateinit var contentEditText: EditText
     private lateinit var backButton: ImageButton
+    private lateinit var addImageButton: ImageButton
+    private lateinit var imagePreview: ImageView
     private lateinit var postButton: Button
     private val viewModel: CreatePostViewModel by viewModels()
+    
+    private var selectedImage: Bitmap? = null
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            openImagePicker()
+        } else {
+            Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private val pickImage = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                try {
+                    selectedImage = MediaStore.Images.Media.getBitmap(contentResolver, uri)
+                    imagePreview.setImageBitmap(selectedImage)
+                    imagePreview.visibility = View.VISIBLE
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +71,8 @@ class CreatePostActivity : AppCompatActivity() {
     private fun initViews() {
         contentEditText = findViewById(R.id.contentEditText)
         backButton = findViewById(R.id.backButton)
+        addImageButton = findViewById(R.id.addImageButton)
+        imagePreview = findViewById(R.id.imagePreview)
         postButton = findViewById(R.id.postButton)
     }
 
@@ -39,9 +81,15 @@ class CreatePostActivity : AppCompatActivity() {
             finish()
         }
 
+        addImageButton.setOnClickListener {
+            checkPermissionAndOpenPicker()
+        }
+
         postButton.setOnClickListener {
             val content = contentEditText.text.toString()
-            viewModel.createPost(content)
+            selectedImage?.let { bitmap ->
+                viewModel.createPostWithImage(content, bitmap)
+            } ?: viewModel.createPost(content)
             postButton.isEnabled = false
         }
 
@@ -52,6 +100,25 @@ class CreatePostActivity : AppCompatActivity() {
                 contentEditText.hint = getString(R.string.whats_on_your_mind)
             }
         }
+    }
+
+    private fun checkPermissionAndOpenPicker() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                openImagePicker()
+            }
+            else -> {
+                requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+        }
+    }
+
+    private fun openImagePicker() {
+        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        pickImage.launch(intent)
     }
 
     private fun observeViewModel() {

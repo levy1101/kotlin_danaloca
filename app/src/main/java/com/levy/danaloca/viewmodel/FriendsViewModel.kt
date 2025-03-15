@@ -49,6 +49,15 @@ class FriendsViewModel(
         }
     }
 
+    fun declineFriendRequest(requestId: String, userId: String) {
+        repository.declineFriendRequest(requestId) { result ->
+            _operationState.postValue(result)
+            // Reload friend requests to update UI immediately
+            loadFriendRequests(userId)
+            loadUsers(userId)
+        }
+    }
+
     fun acceptFriendRequest(request: FriendRequest) {
         repository.acceptFriendRequest(request) { result ->
             _operationState.postValue(result)
@@ -60,13 +69,6 @@ class FriendsViewModel(
 
     fun removeFriend(userId: String, friendId: String) {
         repository.removeFriend(userId, friendId) { result ->
-            _operationState.postValue(result)
-            loadUsers(userId)
-        }
-    }
-
-    fun blockUser(userId: String, blockedUserId: String) {
-        repository.blockUser(userId, blockedUserId) { result ->
             _operationState.postValue(result)
             loadUsers(userId)
         }

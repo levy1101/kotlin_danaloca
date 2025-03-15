@@ -1,9 +1,9 @@
 package com.levy.danaloca.repository
 
 import com.google.android.gms.tasks.Task
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.*
 import com.levy.danaloca.model.User
+import com.levy.danaloca.utils.Resource
 
 class UserRepository {
     private val database = FirebaseDatabase.getInstance()
@@ -38,5 +38,24 @@ class UserRepository {
 
     fun deleteUser(userId: String): Task<Void> {
         return usersRef.child(userId).removeValue()
+    }
+
+    fun getUserProfile(userId: String, callback: (Resource<User>) -> Unit) {
+        callback(Resource.loading())
+
+        usersRef.child(userId).addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val user = snapshot.getValue(User::class.java)
+                if (user != null) {
+                    callback(Resource.success(user.copy(id = snapshot.key ?: "")))
+                } else {
+                    callback(Resource.error("User not found"))
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                callback(Resource.error(error.message))
+            }
+        })
     }
 }

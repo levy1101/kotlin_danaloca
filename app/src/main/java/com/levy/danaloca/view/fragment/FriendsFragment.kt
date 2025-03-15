@@ -8,6 +8,7 @@ import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
@@ -76,11 +77,18 @@ class FriendsFragment : Fragment() {
             onAcceptRequest = { request ->
                 viewModel.acceptFriendRequest(request)
             },
-            onDeclineRequest = { requestId ->
-                viewModel.cancelFriendRequest(requestId, currentUserId)
+            onDeclineRequest = { requestId, userId ->
+                viewModel.declineFriendRequest(requestId, userId)
             },
             onFriendOptionsSelected = { userId, view ->
                 showFriendOptionsMenu(userId, view)
+            },
+            onItemClick = { userId ->
+                // Navigate to user profile with userId using Bundle
+                val bundle = Bundle().apply {
+                    putString("userId", userId)
+                }
+                findNavController().navigate(R.id.action_nav_friends_to_user_profile, bundle)
             }
         )
         
@@ -131,10 +139,6 @@ class FriendsFragment : Fragment() {
                         viewModel.removeFriend(currentUserId, userId)
                         true
                     }
-                    R.id.action_block -> {
-                        viewModel.blockUser(currentUserId, userId)
-                        true
-                    }
                     else -> false
                 }
             }
@@ -173,8 +177,9 @@ private class FriendsAdapter(
     private val onAddFriend: (String) -> Unit,
     private val onCancelRequest: (String) -> Unit,
     private val onAcceptRequest: (FriendRequest) -> Unit,
-    private val onDeclineRequest: (String) -> Unit,
-    private val onFriendOptionsSelected: (String, View) -> Unit
+    private val onDeclineRequest: (String, String) -> Unit,
+    private val onFriendOptionsSelected: (String, View) -> Unit,
+    private val onItemClick: (String) -> Unit
 ) : RecyclerView.Adapter<FriendsAdapter.FriendViewHolder>() {
 
     private var users = emptyList<User>()
@@ -220,78 +225,19 @@ private class FriendsAdapter(
                 tvLocation.text = user.location
                 tvLocation.visibility = if (user.location.isNotEmpty()) View.VISIBLE else View.GONE
 
-                // Handle button states based on relationship status
-                when {
-                    user.isFriendWith(currentUserId) -> {
-                        showFriendsOptions()
-                        btnFriendOptions.setOnClickListener { 
-                            onFriendOptionsSelected(user.id, it)
-                        }
-                    }
-                    requests.any { it.senderId == user.id && it.receiverId == currentUserId } -> {
-                        showReceivedRequest()
-                        btnAccept.setOnClickListener {
-                            requests.find { it.senderId == user.id }?.let {
-                                onAcceptRequest(it)
-                            }
-                        }
-                        btnDecline.setOnClickListener {
-                            requests.find { it.senderId == user.id }?.let {
-                                onDeclineRequest(it.id)
-                            }
-                        }
-                    }
-                    requests.any { it.senderId == currentUserId && it.receiverId == user.id } -> {
-                        showCancelRequest()
-                        btnCancelRequest.setOnClickListener {
-                            requests.find { it.receiverId == user.id }?.let {
-                                onCancelRequest(it.id)
-                            }
-                        }
-                    }
-                    else -> {
-                        showAddFriend()
-                        btnAddFriend.setOnClickListener {
-                            onAddFriend(user.id)
-                        }
-                    }
+                // Set click listener on the root view
+                root.setOnClickListener {
+                    onItemClick(user.id)
                 }
-            }
-        }
 
-        private fun showAddFriend() {
-            binding.apply {
-                btnAddFriend.visibility = View.VISIBLE
-                btnCancelRequest.visibility = View.GONE
-                layoutRequestActions.visibility = View.GONE
-                btnFriendOptions.visibility = View.GONE
-            }
-        }
-
-        private fun showCancelRequest() {
-            binding.apply {
-                btnAddFriend.visibility = View.GONE
-                btnCancelRequest.visibility = View.VISIBLE
-                layoutRequestActions.visibility = View.GONE
-                btnFriendOptions.visibility = View.GONE
-            }
-        }
-
-        private fun showReceivedRequest() {
-            binding.apply {
-                btnAddFriend.visibility = View.GONE
-                btnCancelRequest.visibility = View.GONE
-                layoutRequestActions.visibility = View.VISIBLE
-                btnFriendOptions.visibility = View.GONE
-            }
-        }
-
-        private fun showFriendsOptions() {
-            binding.apply {
-                btnAddFriend.visibility = View.GONE
-                btnCancelRequest.visibility = View.GONE
-                layoutRequestActions.visibility = View.GONE
-                btnFriendOptions.visibility = View.VISIBLE
+                // Setup friend actions
+                friendActions.setUserIds(currentUserId, user.id)
+                friendActions.setAddFriendListener { onAddFriend(it) }
+                friendActions.setCancelRequestListener { onCancelRequest(it) }
+                friendActions.setAcceptRequestListener { onAcceptRequest(it) }
+                friendActions.setDeclineRequestListener { requestId, userId -> onDeclineRequest(requestId, userId) }
+                friendActions.setFriendOptionsListener { userId, view -> onFriendOptionsSelected(userId, view) }
+                friendActions.updateState(user, requests)
             }
         }
     }

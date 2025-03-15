@@ -1,5 +1,6 @@
 package com.levy.danaloca.viewmodel
 
+import android.graphics.Bitmap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -36,6 +37,30 @@ class CreatePostViewModel : ViewModel() {
         )
 
         postRepository.createPost(post).observeForever { result ->
+            createPostStatus.value = result
+        }
+    }
+
+    fun createPostWithImage(content: String, bitmap: Bitmap) {
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            createPostStatus.value = Resource.error("User not logged in", false)
+            return
+        }
+
+        if (content.isBlank()) {
+            createPostStatus.value = Resource.error("Content cannot be empty", false)
+            return
+        }
+
+        val post = Post(
+            id = UUID.randomUUID().toString(),
+            userId = currentUser.uid,
+            content = content.trim(),
+            timestamp = System.currentTimeMillis()
+        )
+
+        postRepository.createPostWithImage(post, bitmap).observeForever { result ->
             createPostStatus.value = result
         }
     }

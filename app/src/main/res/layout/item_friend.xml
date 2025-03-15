@@ -48,82 +48,14 @@
             app:layout_constraintTop_toBottomOf="@id/tvUsername"
             tools:text="Location" />
 
-        <!-- Friend Actions Container -->
-        <FrameLayout
-            android:id="@+id/buttonContainer"
+        <!-- Friend Actions -->
+        <com.levy.danaloca.view.custom.FriendActionsView
+            android:id="@+id/friendActions"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="@id/ivProfile">
-
-            <!-- Add Friend Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnAddFriend"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="Add Friend"
-                android:textSize="12sp"
-                android:visibility="gone"
-                app:cornerRadius="20dp"
-                app:icon="@drawable/ic_add"
-                app:iconSize="16dp"
-                tools:visibility="visible" />
-
-            <!-- Cancel Request Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnCancelRequest"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="Cancel"
-                android:textSize="12sp"
-                android:visibility="gone"
-                app:cornerRadius="20dp" />
-
-            <!-- Accept/Decline Container -->
-            <LinearLayout
-                android:id="@+id/layoutRequestActions"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:visibility="gone">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnAccept"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:text="Accept"
-                    android:textSize="12sp"
-                    app:cornerRadius="20dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnDecline"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:text="Decline"
-                    android:textSize="12sp"
-                    app:cornerRadius="20dp" />
-            </LinearLayout>
-
-            <!-- Friends Dropdown -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnFriendOptions"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="Friends"
-                android:textSize="12sp"
-                android:visibility="gone"
-                app:cornerRadius="20dp"
-                app:icon="@drawable/ic_more"
-                app:iconGravity="end"
-                app:strokeColor="#757575"
-                app:strokeWidth="1dp" />
-
-        </FrameLayout>
+            app:layout_constraintBottom_toBottomOf="@id/ivProfile"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
