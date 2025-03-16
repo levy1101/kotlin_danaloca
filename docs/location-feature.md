@@ -1,227 +1,188 @@
-# Thêm tính năng địa điểm cho bài viết
+# Location Feature Implementation Guide for Posts
 
-## Tổng quan
-Thêm tính năng cho phép người dùng:
-- Thêm địa điểm chính xác khi tạo bài viết
-- Hiển thị địa điểm đăng bài trong bài viết
-- Xem chi tiết địa điểm khi nhấn vào bài viết
+## Prerequisites
+- Mapbox API key (already configured in AndroidManifest.xml)
+- Android SDK 30 
+- Firebase Realtime Database setup
 
-## API được sử dụng
-- **Photon API** (https://photon.komoot.io/)
-  - API miễn phí, không cần đăng ký
-  - Hỗ trợ tìm kiếm địa điểm
-  - Dữ liệu từ OpenStreetMap
-  - Endpoint: `https://photon.komoot.io/api/`
+## Data Structure in Firebase
 
-## Các bước thực hiện
-
-### 1. Cập nhật Model
-
-```kotlin
-// Thêm vào Post.kt
-data class Post(
-    // ... các trường hiện tại
-    val latitude: Double = 0.0,
-    val longitude: Double = 0.0, 
-    val locationName: String = "",
-    val address: String = ""
-)
-
-// Tạo model cho response từ Photon API
-data class PhotonLocation(
-    val name: String,
-    val address: String,
-    val lat: Double,
-    val lon: Double
-)
-```
-
-### 2. Tạo LocationRepository
-
-```kotlin
-// Tạo file LocationRepository.kt
-class LocationRepository {
-    private val photonBaseUrl = "https://photon.komoot.io/api"
-    
-    suspend fun searchLocation(query: String): List<PhotonLocation> {
-        // Implement search using Retrofit
+```json
+{
+  "posts": {
+    "postId": {
+      "location": {
+        "latitude": 10.123456,
+        "longitude": 106.789012,
+        "name": "Location Name (optional)"
+      }
+      // other post data
     }
+  }
 }
 ```
 
-### 3. Cập nhật UI
+## Implementation Steps
 
-#### a. Layout cho tìm kiếm địa điểm
+### 1. Create Post with Location
+
+1. Add map to create post layout:
 ```xml
-<!-- layout/location_search_dialog.xml -->
-<LinearLayout>
-    <EditText
-        android:id="@+id/searchInput"
-        android:hint="Nhập địa điểm..." />
-        
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/locationResults"
-        ... />
-</LinearLayout>
+<com.mapbox.maps.MapView
+    android:id="@+id/mapView"
+    android:layout_width="match_parent"
+    android:layout_height="250dp"
+    android:layout_margin="16dp"/>
 ```
 
-#### b. Layout hiển thị địa điểm trong bài viết
-```xml
-<!-- Thêm vào layout item_post.xml -->
-<TextView
-    android:id="@+id/locationText"
-    android:drawableStart="@drawable/ic_location"
-    ... />
-```
-
-#### c. Layout xem chi tiết địa điểm
-```xml
-<!-- layout/location_detail_bottom_sheet.xml -->
-<LinearLayout>
-    <TextView 
-        android:id="@+id/locationName"
-        ... />
-    <TextView
-        android:id="@+id/address"
-        ... />
-    <!-- Thêm MapView nếu cần -->
-</LinearLayout>
-```
-
-### 4. Flow thực hiện
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant A as App
-    participant P as Photon API
-    participant F as Firebase
-    
-    U->>A: Tạo bài viết mới
-    U->>A: Chọn thêm địa điểm
-    A->>P: Gọi API tìm kiếm
-    P-->>A: Trả về danh sách địa điểm
-    U->>A: Chọn địa điểm
-    A->>F: Lưu bài viết với thông tin địa điểm
-    
-    U->>A: Xem bài viết
-    U->>A: Click vào địa điểm
-    A->>A: Hiển thị bottom sheet
-```
-
-## Chi tiết các bước
-
-### 1. Cài đặt dependencies
-```groovy
-// app/build.gradle
-dependencies {
-    // Retrofit cho API calls
-    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
-}
-```
-
-### 2. Triển khai LocationRepository
+2. Initialize map with zoom controls:
 ```kotlin
-interface PhotonApi {
-    @GET("/api")
-    suspend fun searchLocation(
-        @Query("q") query: String,
-        @Query("limit") limit: Int = 10
-    ): PhotonResponse
-}
+private lateinit var mapView: MapView
+private lateinit var mapboxMap: MapboxMap
+private var currentMarker: PointAnnotationManager? = null
 
-class LocationRepository {
-    private val retrofit = Retrofit.Builder()
-        .baseUrl("https://photon.komoot.io")
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-        
-    private val api = retrofit.create(PhotonApi::class.java)
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
     
-    suspend fun searchLocation(query: String) = 
-        api.searchLocation(query)
-}
-```
-
-### 3. Tạo ViewModel
-```kotlin
-class LocationViewModel : ViewModel() {
-    private val repository = LocationRepository()
-    private val _locations = MutableLiveData<List<PhotonLocation>>()
-    val locations: LiveData<List<PhotonLocation>> = _locations
+    // Initialize map
+    mapView = findViewById(R.id.mapView)
+    mapboxMap = mapView.getMapboxMap()
     
-    fun searchLocation(query: String) {
-        viewModelScope.launch {
-            val results = repository.searchLocation(query)
-            _locations.value = results
-        }
-    }
-}
-```
-
-### 4. Cập nhật PostRepository
-```kotlin
-// Thêm vào PostRepository
-fun createPostWithLocation(
-    post: Post,
-    location: PhotonLocation
-): MutableLiveData<Resource<Boolean>> {
-    val postWithLocation = post.copy(
-        latitude = location.lat,
-        longitude = location.lon,
-        locationName = location.name,
-        address = location.address
+    // Enable zoom controls
+    mapView.gestures.pitchEnabled = true
+    mapView.gestures.scrollEnabled = true
+    mapView.gestures.pinchToZoomEnabled = true
+    
+    // Set initial zoom level
+    mapboxMap.setCamera(
+        CameraOptions.Builder()
+            .zoom(15.0)
+            .build()
     )
-    return createPost(postWithLocation)
 }
 ```
 
-## Testing
-
-1. Unit Tests
+3. Handle map click to add/update marker:
 ```kotlin
-@Test
-fun `test location search`() {
-    // Test LocationRepository
-}
-
-@Test
-fun `test post creation with location`() {
-    // Test PostRepository
+private fun setupMapClickListener() {
+    mapboxMap.addOnMapClickListener { point ->
+        // Remove existing marker
+        currentMarker?.deleteAll()
+        
+        // Add new marker
+        val annotationApi = mapView?.annotations
+        currentMarker = annotationApi?.createPointAnnotationManager()
+        
+        val pointAnnotationOptions = PointAnnotationOptions()
+            .withPoint(point)
+            .withIconImage(markerIconBitmap)
+        
+        currentMarker?.create(pointAnnotationOptions)
+        
+        // Save coordinates for post creation
+        selectedLocation = LatLng(point.latitude(), point.longitude())
+        
+        true
+    }
 }
 ```
 
-2. UI Tests
-- Kiểm tra flow thêm địa điểm khi tạo bài viết
-- Kiểm tra hiển thị địa điểm trong danh sách bài viết
-- Kiểm tra bottom sheet hiển thị thông tin địa điểm
+4. Save location with post:
+```kotlin
+private fun savePost(content: String, location: LatLng) {
+    val postRef = FirebaseDatabase.getInstance().reference
+        .child("posts")
+        .push()
+    
+    val post = HashMap<String, Any>()
+    post["content"] = content
+    post["location"] = mapOf(
+        "latitude" to location.latitude,
+        "longitude" to location.longitude
+    )
+    
+    postRef.setValue(post)
+}
+```
 
-## Lưu ý
+### 2. View Post Location
 
-1. Xử lý lỗi
-- Kiểm tra kết nối mạng trước khi gọi API
-- Hiển thị thông báo lỗi phù hợp
-- Cache kết quả tìm kiếm gần đây
+1. Display map in post detail view:
+```xml
+<com.mapbox.maps.MapView
+    android:id="@+id/postLocationMap"
+    android:layout_width="match_parent"
+    android:layout_height="200dp"
+    android:layout_margin="16dp"/>
+```
 
-2. UX
-- Thêm loading indicator khi tìm kiếm
-- Debounce input tìm kiếm
-- Hiển thị placeholder khi không có địa điểm
+2. Load and display location:
+```kotlin
+private fun displayPostLocation(postId: String) {
+    // Get post location from Firebase
+    FirebaseDatabase.getInstance().reference
+        .child("posts")
+        .child(postId)
+        .child("location")
+        .addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val latitude = snapshot.child("latitude").getValue(Double::class.java)
+                val longitude = snapshot.child("longitude").getValue(Double::class.java)
+                
+                if (latitude != null && longitude != null) {
+                    // Add marker
+                    val point = Point.fromLngLat(longitude, latitude)
+                    addMarkerToMap(point)
+                    
+                    // Center and zoom map
+                    mapboxMap.setCamera(
+                        CameraOptions.Builder()
+                            .center(point)
+                            .zoom(15.0)
+                            .build()
+                    )
+                }
+            }
+            
+            override fun onCancelled(error: DatabaseError) {
+                // Handle error
+            }
+        })
+}
+```
 
-## Kế hoạch triển khai
+### 3. Helper Functions
 
-1. Phase 1 (1-2 ngày)
-- Cập nhật models
-- Thêm dependencies
-- Implement LocationRepository
+1. Add marker to map:
+```kotlin
+private fun addMarkerToMap(point: Point) {
+    // Remove existing marker
+    currentMarker?.deleteAll()
+    
+    // Create new marker
+    val annotationApi = mapView?.annotations
+    currentMarker = annotationApi?.createPointAnnotationManager()
+    
+    val pointAnnotationOptions = PointAnnotationOptions()
+        .withPoint(point)
+        .withIconImage(markerIconBitmap)
+    
+    currentMarker?.create(pointAnnotationOptions)
+}
+```
 
-2. Phase 2 (2-3 ngày)
-- Tạo UI components
-- Implement ViewModels
-- Tích hợp vào flow tạo bài viết
-
-3. Phase 3 (1-2 ngày)
-- Testing
-- Bug fixing
-- Polish UI/UX
+2. Create marker bitmap:
+```kotlin
+private fun getBitmapFromVectorDrawable(drawable: Int): Bitmap {
+    val vectorDrawable = ContextCompat.getDrawable(context, drawable)
+    val bitmap = Bitmap.createBitmap(
+        vectorDrawable!!.intrinsicWidth,
+        vectorDrawable.intrinsicHeight,
+        Bitmap.Config.ARGB_8888
+    )
+    val canvas = Canvas(bitmap)
+    vectorDrawable.setBounds(0, 0, canvas.width, canvas.height)
+    vectorDrawable.draw(canvas)
+    return bitmap
+}
+```

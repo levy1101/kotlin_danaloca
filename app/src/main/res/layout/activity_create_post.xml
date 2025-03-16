@@ -109,15 +109,44 @@
                 android:adjustViewBounds="true"
                 app:shapeAppearanceOverlay="@style/RoundedImageView" />
 
-            <ImageButton
-                android:id="@+id/addImageButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_margin="16dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="8dp"
-                android:src="@drawable/ic_add"
-                app:tint="@color/black" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="start">
+
+                <ImageButton
+                    android:id="@+id/addLocationButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_margin="16dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_location"
+                    app:tint="@color/black" />
+
+                <ImageButton
+                    android:id="@+id/addImageButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_margin="16dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_add"
+                    app:tint="@color/black" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/locationText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:visibility="gone"
+                android:drawableStart="@drawable/ic_location"
+                android:drawablePadding="8dp"
+                android:textColor="@color/black"
+                android:textSize="14sp" />
 
         </LinearLayout>
 

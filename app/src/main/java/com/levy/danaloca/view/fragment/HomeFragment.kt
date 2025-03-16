@@ -19,6 +19,7 @@ import com.levy.danaloca.utils.Status
 import com.levy.danaloca.view.SearchActivity
 import com.levy.danaloca.view.CreatePostActivity
 import com.levy.danaloca.view.MessagesActivity
+import com.levy.danaloca.view.LocationPreviewDialog
 import com.levy.danaloca.viewmodel.HomeViewModel
 import com.levy.danaloca.viewmodel.UserViewModel
 
@@ -145,5 +146,14 @@ class HomeFragment : Fragment(), ActionBarFragment.ActionBarListener, PostAdapte
     override fun onMoreClicked(post: Post) {
         // TODO: Show bottom sheet with options
         Toast.makeText(context, "More options coming soon", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onPostLongPressed(post: Post) {
+        post.latitude?.let { lat ->
+            post.longitude?.let { lng ->
+                LocationPreviewDialog.newInstance(lat, lng)
+                    .show(childFragmentManager, "location_preview")
+            }
+        }
     }
 }

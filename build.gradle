@@ -4,6 +4,7 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        jcenter()
     }
     dependencies {
         classpath "com.android.tools.build:gradle:4.2.2"
@@ -20,6 +21,13 @@ allprojects {
         google()
         mavenCentral()
         jcenter() // Warning: this repository is going to shut down soon
+        maven {
+            url = uri("https://api.mapbox.com/downloads/v2/releases/maven")
+            credentials {
+                username = "lethivyqna123123"
+                password = "sk.eyJ1IjoibGV0aGl2eXFuYTEyMzEyMyIsImEiOiJjbThiZWdzeHIxYWhrMmpzN2Z3MGc1cXFkIn0.sujNgDyufkXXFT41bjrUvQ" // This is different from your public access token
+            }
+        }
     }
 }
 

@@ -17,7 +17,7 @@ class CreatePostViewModel : ViewModel() {
     private val createPostStatus = MutableLiveData<Resource<Boolean>>()
     fun getCreatePostStatus(): LiveData<Resource<Boolean>> = createPostStatus
 
-    fun createPost(content: String) {
+    fun createPost(content: String, latitude: Double? = null, longitude: Double? = null) {
         val currentUser = auth.currentUser
         if (currentUser == null) {
             createPostStatus.value = Resource.error("User not logged in", false)
@@ -33,7 +33,9 @@ class CreatePostViewModel : ViewModel() {
             id = UUID.randomUUID().toString(),
             userId = currentUser.uid,
             content = content.trim(),
-            timestamp = System.currentTimeMillis()
+            timestamp = System.currentTimeMillis(),
+            latitude = latitude,
+            longitude = longitude
         )
 
         postRepository.createPost(post).observeForever { result ->
@@ -41,7 +43,7 @@ class CreatePostViewModel : ViewModel() {
         }
     }
 
-    fun createPostWithImage(content: String, bitmap: Bitmap) {
+    fun createPostWithImage(content: String, bitmap: Bitmap, latitude: Double? = null, longitude: Double? = null) {
         val currentUser = auth.currentUser
         if (currentUser == null) {
             createPostStatus.value = Resource.error("User not logged in", false)
@@ -57,7 +59,9 @@ class CreatePostViewModel : ViewModel() {
             id = UUID.randomUUID().toString(),
             userId = currentUser.uid,
             content = content.trim(),
-            timestamp = System.currentTimeMillis()
+            timestamp = System.currentTimeMillis(),
+            latitude = latitude,
+            longitude = longitude
         )
 
         postRepository.createPostWithImage(post, bitmap).observeForever { result ->

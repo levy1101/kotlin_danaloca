@@ -26,6 +26,7 @@ import com.levy.danaloca.repository.PostRepository
 import com.levy.danaloca.utils.Resource
 import com.levy.danaloca.utils.Status
 import com.levy.danaloca.adapter.PostAdapter
+import com.levy.danaloca.view.LocationPreviewDialog
 import com.levy.danaloca.viewmodel.UserViewModel
 import com.levy.danaloca.viewmodel.HomeViewModel
 
@@ -197,5 +198,14 @@ class MyProfileFragment : Fragment(), PostAdapter.PostListener {
 
     override fun onMoreClicked(post: Post) {
         // Handle more options click if needed
+    }
+
+    override fun onPostLongPressed(post: Post) {
+        post.latitude?.let { lat ->
+            post.longitude?.let { lng ->
+                LocationPreviewDialog.newInstance(lat, lng)
+                    .show(childFragmentManager, "location_preview")
+            }
+        }
     }
 }

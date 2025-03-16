@@ -66,6 +66,7 @@ class PostAdapter(
         fun onLikeClicked(post: Post)
         fun onCommentClicked(post: Post)
         fun onMoreClicked(post: Post)
+        fun onPostLongPressed(post: Post)
     }
 
     var listener: PostListener? = null
@@ -101,6 +102,7 @@ class PostAdapter(
         private val moreButton: ImageButton = itemView.findViewById(R.id.moreButton)
         private val likeIcon: ImageView = itemView.findViewById(R.id.likeIcon)
         private val postImage: ImageView = itemView.findViewById(R.id.postImage)
+        private val locationIcon: ImageView = itemView.findViewById(R.id.locationIcon)
     fun bind(post: Post) {
        Log.d("PostAdapter", "Binding post: ${post.id}, userId: ${post.userId}")
 
@@ -152,6 +154,13 @@ class PostAdapter(
            postImage.visibility = View.GONE
        }
 
+       // Handle location icon
+       locationIcon.visibility = if (post.latitude != null && post.longitude != null) {
+           View.VISIBLE
+       } else {
+           View.GONE
+       }
+
        // Set up click listeners
        likeButton.setOnClickListener {
            listener?.onLikeClicked(post)
@@ -163,6 +172,16 @@ class PostAdapter(
 
        moreButton.setOnClickListener {
            listener?.onMoreClicked(post)
+       }
+
+       // Set up long click listener for posts with location
+       if (post.latitude != null && post.longitude != null) {
+           itemView.setOnLongClickListener {
+               listener?.onPostLongPressed(post)
+               true
+           }
+       } else {
+           itemView.setOnLongClickListener(null)
        }
 
        // Update like icon based on current user's like status

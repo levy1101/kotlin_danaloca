@@ -19,6 +19,7 @@ import com.levy.danaloca.model.Post
 import com.levy.danaloca.model.User
 import com.levy.danaloca.utils.Status
 import com.levy.danaloca.adapter.PostAdapter
+import com.levy.danaloca.view.LocationPreviewDialog
 import com.levy.danaloca.viewmodel.HomeViewModel
 import com.levy.danaloca.viewmodel.UserViewModel
 import com.levy.danaloca.viewmodel.UserProfileViewModel
@@ -190,6 +191,18 @@ class UserProfileFragment : Fragment(), PostAdapter.PostListener {
         }
     }
 
+    private fun setupMessageButton() {
+        binding.btnMessage.setOnClickListener {
+            val bundle = Bundle().apply {
+                putString("userId", profileUserId)
+            }
+            findNavController().navigate(
+                R.id.action_userProfileFragment_to_chatFragment,
+                bundle
+            )
+        }
+    }
+
     private fun updateUI(user: User) {
         binding.apply {
             // Set user image (using placeholder for now)
@@ -244,9 +257,7 @@ class UserProfileFragment : Fragment(), PostAdapter.PostListener {
 
     // PostAdapter.PostListener Implementation
     override fun onLikeClicked(post: Post) {
-        currentUserId?.let { userId ->
-            homeViewModel.toggleLike(post.id, userId)
-        }
+        homeViewModel.toggleLike(post.id, currentUserId)
     }
 
     override fun onCommentClicked(post: Post) {
@@ -260,16 +271,12 @@ class UserProfileFragment : Fragment(), PostAdapter.PostListener {
         }
     }
 
-    private fun setupMessageButton() {
-        binding.btnMessage.setOnClickListener {
-            // Navigate to chat fragment with the profile user ID
-            val bundle = Bundle().apply {
-                putString("userId", profileUserId)
+    override fun onPostLongPressed(post: Post) {
+        post.latitude?.let { lat ->
+            post.longitude?.let { lng ->
+                LocationPreviewDialog.newInstance(lat, lng)
+                    .show(childFragmentManager, "location_preview")
             }
-            findNavController().navigate(
-                R.id.action_userProfileFragment_to_chatFragment,
-                bundle
-            )
         }
     }
 

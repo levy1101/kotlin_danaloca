@@ -12,6 +12,7 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -26,11 +27,28 @@ class CreatePostActivity : AppCompatActivity() {
     private lateinit var contentEditText: EditText
     private lateinit var backButton: ImageButton
     private lateinit var addImageButton: ImageButton
+    private lateinit var addLocationButton: ImageButton
     private lateinit var imagePreview: ImageView
+    private lateinit var locationText: TextView
     private lateinit var postButton: Button
     private val viewModel: CreatePostViewModel by viewModels()
     
     private var selectedImage: Bitmap? = null
+    private var selectedLatitude: Double? = null
+    private var selectedLongitude: Double? = null
+
+    private val pickLocation = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.let { data ->
+                selectedLatitude = data.getDoubleExtra(MapLocationActivity.EXTRA_LATITUDE, 0.0)
+                selectedLongitude = data.getDoubleExtra(MapLocationActivity.EXTRA_LONGITUDE, 0.0)
+                locationText.text = "Location: $selectedLatitude, $selectedLongitude"
+                locationText.visibility = View.VISIBLE
+            }
+        }
+    }
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -67,40 +85,54 @@ class CreatePostActivity : AppCompatActivity() {
         setupListeners()
         observeViewModel()
     }
+private fun initViews() {
+    contentEditText = findViewById(R.id.contentEditText)
+    backButton = findViewById(R.id.backButton)
+    addImageButton = findViewById(R.id.addImageButton)
+    addLocationButton = findViewById(R.id.addLocationButton)
+    imagePreview = findViewById(R.id.imagePreview)
+    locationText = findViewById(R.id.locationText)
+    postButton = findViewById(R.id.postButton)
+}
 
-    private fun initViews() {
-        contentEditText = findViewById(R.id.contentEditText)
-        backButton = findViewById(R.id.backButton)
-        addImageButton = findViewById(R.id.addImageButton)
-        imagePreview = findViewById(R.id.imagePreview)
-        postButton = findViewById(R.id.postButton)
+private fun setupListeners() {
+    backButton.setOnClickListener {
+        finish()
     }
 
-    private fun setupListeners() {
-        backButton.setOnClickListener {
-            finish()
-        }
+    addImageButton.setOnClickListener {
+        checkPermissionAndOpenPicker()
+    }
 
-        addImageButton.setOnClickListener {
-            checkPermissionAndOpenPicker()
-        }
+    addLocationButton.setOnClickListener {
+        pickLocation.launch(Intent(this, MapLocationActivity::class.java))
+    }
 
-        postButton.setOnClickListener {
-            val content = contentEditText.text.toString()
-            selectedImage?.let { bitmap ->
-                viewModel.createPostWithImage(content, bitmap)
-            } ?: viewModel.createPost(content)
-            postButton.isEnabled = false
-        }
+    postButton.setOnClickListener {
+        val content = contentEditText.text.toString()
+        selectedImage?.let { bitmap ->
+            viewModel.createPostWithImage(
+                content = content,
+                bitmap = bitmap,
+                latitude = selectedLatitude,
+                longitude = selectedLongitude
+            )
+        } ?: viewModel.createPost(
+            content = content,
+            latitude = selectedLatitude,
+            longitude = selectedLongitude
+        )
+        postButton.isEnabled = false
+    }
 
-        contentEditText.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) {
-                contentEditText.hint = ""
-            } else if (contentEditText.text.isBlank()) {
-                contentEditText.hint = getString(R.string.whats_on_your_mind)
-            }
+    contentEditText.setOnFocusChangeListener { _, hasFocus ->
+        if (hasFocus) {
+            contentEditText.hint = ""
+        } else if (contentEditText.text.isBlank()) {
+            contentEditText.hint = getString(R.string.whats_on_your_mind)
         }
     }
+}
 
     private fun checkPermissionAndOpenPicker() {
         when {
