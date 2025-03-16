@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
 import com.levy.danaloca.R
@@ -58,6 +59,7 @@ class UserProfileFragment : Fragment(), PostAdapter.PostListener {
         setupObservers()
         setupBackButton()
         setupSwipeRefresh()
+        setupMessageButton()
 
         // Get userId from arguments and load profile
         arguments?.getString("userId")?.let { userId ->
@@ -255,6 +257,19 @@ class UserProfileFragment : Fragment(), PostAdapter.PostListener {
         // Show options menu if post belongs to current user
         if (post.userId == currentUserId) {
             // Implement post options menu (edit, delete, etc.)
+        }
+    }
+
+    private fun setupMessageButton() {
+        binding.btnMessage.setOnClickListener {
+            // Navigate to chat fragment with the profile user ID
+            val bundle = Bundle().apply {
+                putString("userId", profileUserId)
+            }
+            findNavController().navigate(
+                R.id.action_userProfileFragment_to_chatFragment,
+                bundle
+            )
         }
     }
 

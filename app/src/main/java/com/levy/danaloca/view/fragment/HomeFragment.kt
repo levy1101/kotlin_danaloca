@@ -123,9 +123,6 @@ class HomeFragment : Fragment(), ActionBarFragment.ActionBarListener, PostAdapte
         startActivity(Intent(activity, CreatePostActivity::class.java))
     }
 
-    override fun onMessageClicked() {
-        startActivity(Intent(activity, MessagesActivity::class.java))
-    }
 
     // PostListener implementations
     override fun onLikeClicked(post: Post) {

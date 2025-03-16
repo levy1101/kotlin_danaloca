@@ -33,4 +33,17 @@
     <action
         android:id="@+id/action_nav_friends_to_user_profile"
         app:destination="@id/nav_user_profile" />
+        
+    <fragment
+        android:id="@+id/nav_chat"
+        android:name="com.levy.danaloca.view.fragment.ChatFragment"
+        tools:layout="@layout/fragment_chat">
+        <argument
+            android:name="userId"
+            app:argType="string" />
+    </fragment>
+
+    <action
+        android:id="@+id/action_userProfileFragment_to_chatFragment"
+        app:destination="@id/nav_chat" />
 </navigation>

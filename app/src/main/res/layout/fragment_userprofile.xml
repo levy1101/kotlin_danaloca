@@ -168,6 +168,17 @@
                 app:layout_constraintTop_toBottomOf="@id/info_card"
                 tools:layout_editor_absoluteX="16dp" />
 
+            <ImageButton
+                android:id="@+id/btn_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="8dp"
+                android:src="@drawable/ic_message"
+                app:layout_constraintBottom_toBottomOf="@id/profile_title"
+                app:layout_constraintEnd_toStartOf="@id/friendActions"
+                app:layout_constraintTop_toTopOf="@id/profile_title" />
+
             <com.levy.danaloca.view.custom.FriendActionsView
                 android:id="@+id/friendActions"
                 android:layout_width="wrap_content"

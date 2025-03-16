@@ -35,7 +35,8 @@
             app:layout_constraintEnd_toStartOf="@id/buttonContainer"
             app:layout_constraintStart_toEndOf="@id/ivProfile"
             app:layout_constraintTop_toTopOf="@id/ivProfile"
-            tools:text="Username" />
+            tools:text="Username"
+            tools:ignore="NotSibling" />
 
         <TextView
             android:id="@+id/tvLocation"

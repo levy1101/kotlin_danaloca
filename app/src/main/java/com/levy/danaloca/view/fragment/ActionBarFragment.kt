@@ -14,12 +14,10 @@ class ActionBarFragment : Fragment() {
 
     private lateinit var searchEditText: EditText
     private lateinit var addButton: FloatingActionButton
-    private lateinit var messageButtonCard: MaterialCardView
 
     interface ActionBarListener {
         fun onSearchClicked()
         fun onAddClicked()
-        fun onMessageClicked()
     }
 
     private var listener: ActionBarListener? = null
@@ -41,7 +39,6 @@ class ActionBarFragment : Fragment() {
 
         searchEditText = view.findViewById(R.id.searchEditText)
         addButton = view.findViewById(R.id.addButton)
-        messageButtonCard = view.findViewById(R.id.messageButton)
 
         setupListeners()
     }
@@ -55,8 +52,5 @@ class ActionBarFragment : Fragment() {
             listener?.onAddClicked()
         }
 
-        messageButtonCard.setOnClickListener {
-            listener?.onMessageClicked()
-        }
     }
 }
