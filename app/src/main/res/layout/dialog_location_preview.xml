@@ -34,7 +34,7 @@
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_zoom_in"
-                android:tint="@color/black" />
+                app:tint="@color/black" />
 
             <View
                 android:layout_width="match_parent"
@@ -47,7 +47,7 @@
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_zoom_out"
-                android:tint="@color/black" />
+                app:tint="@color/black" />
         </LinearLayout>
 
     </FrameLayout>

@@ -241,7 +241,17 @@ class RegisterActivity : AppCompatActivity() {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    val user = User(email, fullName, phone, gender, location, birthdate, age)
+                    val user = User(
+                        id = auth.currentUser?.uid ?: "",
+                        username = fullName.lowercase().replace(" ", ""),
+                        email = email,
+                        fullName = fullName,
+                        phoneNumber = phone,
+                        gender = gender,
+                        location = location,
+                        birthdate = birthdate,
+                        age = age
+                    )
                     viewModel.saveUser(user)
                     Toast.makeText(this, "Registration successful!", Toast.LENGTH_SHORT).show()
                     navigateToLogin()
