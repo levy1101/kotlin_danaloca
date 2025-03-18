@@ -19,6 +19,8 @@ import com.levy.danaloca.model.FriendRequest
 import com.levy.danaloca.model.User
 import com.levy.danaloca.utils.Resource
 import com.levy.danaloca.utils.Status
+import com.levy.danaloca.utils.AssetUtils
+import com.levy.danaloca.utils.ImageUtils
 import com.levy.danaloca.viewmodel.FriendsViewModel
 
 class FriendsFragment : Fragment() {
@@ -219,7 +221,23 @@ private class FriendsAdapter(
             binding.apply {
                 // Set username and profile image
                 tvUsername.text = user.username ?: user.fullName
-                ivProfile.setImageResource(R.drawable.default_avatar)
+                
+                // Handle avatar
+                if (user.avatar.isNotEmpty()) {
+                    ImageUtils.base64ToBitmap(user.avatar)?.let { bitmap ->
+                        ivProfile.setImageBitmap(bitmap)
+                    }
+                } else {
+                    // Load default avatar if user doesn't have one
+                    val defaultAvatarBase64 = AssetUtils.getDefaultAvatarBase64(root.context)
+                    if (defaultAvatarBase64.isNotEmpty()) {
+                        ImageUtils.base64ToBitmap(defaultAvatarBase64)?.let { bitmap ->
+                            ivProfile.setImageBitmap(bitmap)
+                        }
+                    } else {
+                        ivProfile.setImageResource(R.drawable.default_avatar)
+                    }
+                }
 
                 // Set location if available
                 tvLocation.text = user.location

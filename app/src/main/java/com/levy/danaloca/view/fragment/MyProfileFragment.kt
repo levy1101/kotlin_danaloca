@@ -25,10 +25,12 @@ import com.levy.danaloca.repository.UserRepository
 import com.levy.danaloca.repository.PostRepository
 import com.levy.danaloca.utils.Resource
 import com.levy.danaloca.utils.Status
+import com.levy.danaloca.utils.ImageUtils
 import com.levy.danaloca.adapter.PostAdapter
 import com.levy.danaloca.view.LocationPreviewDialog
 import com.levy.danaloca.viewmodel.UserViewModel
 import com.levy.danaloca.viewmodel.HomeViewModel
+import de.hdodenhof.circleimageview.CircleImageView
 
 class MyProfileFragment : Fragment(), PostAdapter.PostListener {
 
@@ -48,6 +50,7 @@ class MyProfileFragment : Fragment(), PostAdapter.PostListener {
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
 
     // UI Elements
+    private lateinit var profileImage: CircleImageView
     private lateinit var tvFullName: TextView
     private lateinit var tvEmail: TextView
     private lateinit var tvPhoneNumber: TextView
@@ -93,6 +96,7 @@ class MyProfileFragment : Fragment(), PostAdapter.PostListener {
     }
 
     private fun initViews(view: View) {
+        profileImage = view.findViewById(R.id.profile_image)
         tvFullName = view.findViewById(R.id.tv_full_name)
         tvEmail = view.findViewById(R.id.tv_email)
         tvPhoneNumber = view.findViewById(R.id.tv_phone_number)
@@ -146,6 +150,14 @@ class MyProfileFragment : Fragment(), PostAdapter.PostListener {
         tvAge.text = user.age
         tvBirthdate.text = user.birthdate
         tvLocation.text = user.location
+
+        // Display avatar
+        if (user.avatar.isNotEmpty()) {
+            val bitmap = ImageUtils.base64ToBitmap(user.avatar)
+            bitmap?.let {
+                profileImage.setImageBitmap(it)
+            }
+        }
     }
 
     private fun loadUserPosts() {

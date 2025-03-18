@@ -1,6 +1,7 @@
 package com.levy.danaloca.view
 
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -20,6 +21,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.levy.danaloca.MainActivity
 import com.levy.danaloca.R
 import com.levy.danaloca.model.User
+import com.levy.danaloca.utils.ImageUtils
 import com.levy.danaloca.viewmodel.UserViewModel
 import java.util.*
 
@@ -27,6 +29,7 @@ class RegisterActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var viewModel: UserViewModel
+    private lateinit var defaultAvatarBase64: String
     private lateinit var emailLayout: TextInputLayout
     private lateinit var phoneLayout: TextInputLayout
     private lateinit var fullNameLayout: TextInputLayout
@@ -51,10 +54,25 @@ class RegisterActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
         viewModel = ViewModelProvider(this)[UserViewModel::class.java]
+        
+        // Load and convert default avatar
+        defaultAvatarBase64 = loadDefaultAvatar()
 
         initializeViews()
         setupObservers()
         setupListeners()
+    }
+
+    private fun loadDefaultAvatar(): String {
+        try {
+            // Read default avatar from assets
+            val inputStream = assets.open("default_avatar.PNG")
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+            return ImageUtils.bitmapToBase64(bitmap)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return "" // Return empty string if failed to load avatar
+        }
     }
 
     private fun initializeViews() {
@@ -250,7 +268,8 @@ class RegisterActivity : AppCompatActivity() {
                         gender = gender,
                         location = location,
                         birthdate = birthdate,
-                        age = age
+                        age = age,
+                        avatar = defaultAvatarBase64
                     )
                     viewModel.saveUser(user)
                     Toast.makeText(this, "Registration successful!", Toast.LENGTH_SHORT).show()
