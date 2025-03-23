@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
 import com.levy.danaloca.R
-import com.levy.danaloca.view.HomeActivity
+import com.levy.danaloca.view.activity.HomeActivity
 
 class SettingsFragment : Fragment() {
 

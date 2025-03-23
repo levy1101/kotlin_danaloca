@@ -1,4 +1,4 @@
-package com.levy.danaloca.view
+package com.levy.danaloca.view.activity
 
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -7,7 +7,6 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.animation.AlphaAnimation
-import android.view.animation.Animation
 import android.widget.Button
 import android.widget.DatePicker
 import android.widget.ProgressBar
@@ -18,7 +17,6 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
-import com.levy.danaloca.MainActivity
 import com.levy.danaloca.R
 import com.levy.danaloca.model.User
 import com.levy.danaloca.utils.ImageUtils

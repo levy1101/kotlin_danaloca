@@ -23,34 +23,34 @@
 
         <!-- Auth Activities -->
         <activity 
-            android:name=".view.LoginActivity"
+            android:name=".view.activity.LoginActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
         
         <activity 
-            android:name=".view.RegisterActivity"
+            android:name=".view.activity.RegisterActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
         <!-- Main Home Activity -->
         <activity 
-            android:name=".view.HomeActivity"
+            android:name=".view.activity.HomeActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan" />
 
         <!-- Home Fragment Action Activities -->
         <activity 
-            android:name=".view.SearchActivity"
+            android:name=".view.activity.SearchActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
         <activity 
-            android:name=".view.CreatePostActivity"
+            android:name=".view.activity.CreatePostActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
         <activity
-            android:name=".view.MapLocationActivity"
+            android:name=".view.activity.MapLocationActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 

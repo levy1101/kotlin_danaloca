@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
@@ -15,7 +14,7 @@ import com.levy.danaloca.R
 import com.levy.danaloca.model.Post
 import com.levy.danaloca.utils.ImageUtils
 import com.levy.danaloca.utils.Resource
-import com.levy.danaloca.view.LocationPreviewDialog
+import com.levy.danaloca.view.activity.LocationPreviewDialog
 import com.levy.danaloca.viewmodel.UserViewModel
 import com.levy.danaloca.viewmodel.HomeViewModel
 import kotlinx.coroutines.launch

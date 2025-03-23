@@ -16,8 +16,8 @@ import android.content.Context
 import com.airbnb.lottie.LottieAnimationView
 import com.google.firebase.auth.FirebaseAuth
 import androidx.core.app.NotificationCompat
-import com.levy.danaloca.view.HomeActivity
-import com.levy.danaloca.view.LoginActivity
+import com.levy.danaloca.view.activity.HomeActivity
+import com.levy.danaloca.view.activity.LoginActivity
 
 class MainActivity : AppCompatActivity() {
 

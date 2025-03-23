@@ -1,4 +1,4 @@
-package com.levy.danaloca.view
+package com.levy.danaloca.view.activity
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -7,7 +7,6 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.animation.AlphaAnimation
-import android.view.animation.Animation
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView

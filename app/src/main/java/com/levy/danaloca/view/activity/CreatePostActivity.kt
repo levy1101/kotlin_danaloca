@@ -1,4 +1,4 @@
-package com.levy.danaloca.view
+package com.levy.danaloca.view.activity
 
 import android.Manifest
 import android.app.Activity

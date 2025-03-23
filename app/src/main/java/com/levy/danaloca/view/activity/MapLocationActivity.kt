@@ -1,4 +1,4 @@
-package com.levy.danaloca.view
+package com.levy.danaloca.view.activity
 
 import android.content.Intent
 import android.os.Bundle
@@ -15,7 +15,6 @@ import com.mapbox.maps.plugin.annotation.annotations
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.mapbox.maps.plugin.gestures.addOnMapClickListener
-import com.mapbox.maps.plugin.gestures.gestures
 
 class MapLocationActivity : AppCompatActivity() {
 

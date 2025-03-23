@@ -1,5 +1,6 @@
 package com.levy.danaloca.view.fragment
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,14 +11,17 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.levy.danaloca.R
 import com.levy.danaloca.adapter.PostAdapter
 import com.levy.danaloca.model.Post
 import com.levy.danaloca.utils.Resource
+import com.levy.danaloca.view.activity.CreatePostActivity
+import com.levy.danaloca.view.activity.LocationPreviewDialog
 import com.levy.danaloca.viewmodel.HomeViewModel
 import com.levy.danaloca.viewmodel.UserViewModel
 
-class HomeFragment : Fragment(), PostAdapter.PostListener {
+class HomeFragment : Fragment(), PostAdapter.PostListener, ActionBarFragment.ActionBarListener {
 
     private val userViewModel: UserViewModel by activityViewModels()
     private val homeViewModel: HomeViewModel by activityViewModels()
@@ -38,6 +42,11 @@ class HomeFragment : Fragment(), PostAdapter.PostListener {
 
         recyclerView = view.findViewById(R.id.postsRecyclerView)
         swipeRefresh = view.findViewById(R.id.swipeRefresh)
+        
+        // Set up ActionBarFragment listener
+        val actionBarFragment = childFragmentManager.findFragmentById(R.id.actionBarFragment) as? ActionBarFragment
+        actionBarFragment?.setActionBarListener(this)
+        
         setupRecyclerView()
         setupSwipeRefresh()
 
@@ -93,8 +102,24 @@ class HomeFragment : Fragment(), PostAdapter.PostListener {
         // Handle more options
     }
 
+    // ActionBarFragment.ActionBarListener implementation
+    override fun onSearchClicked() {
+
+    }
+
+    override fun onAddClicked() {
+        startActivity(Intent(requireContext(), CreatePostActivity::class.java))
+    }
+
+    private fun showLocationPreview(latitude: Double, longitude: Double) {
+        val dialog = LocationPreviewDialog.newInstance(latitude, longitude)
+        dialog.show(childFragmentManager, "location_preview")
+    }
+
     override fun onPostLongPressed(post: Post) {
-        // Handle long press (e.g., show location on map)
+        if (post.latitude != null && post.longitude != null) {
+            showLocationPreview(post.latitude, post.longitude)
+        }
     }
 
     override fun onBookmarkClicked(post: Post) {

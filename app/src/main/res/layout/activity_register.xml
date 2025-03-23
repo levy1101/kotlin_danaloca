@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/main_background_gradient"
-    tools:context=".view.RegisterActivity">
+    tools:context=".view.activity.RegisterActivity">
 
     <!-- Semi-transparent overlay for blur effect -->
     <View
