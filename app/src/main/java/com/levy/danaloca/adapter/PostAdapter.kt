@@ -67,6 +67,8 @@ class PostAdapter(
         fun onCommentClicked(post: Post)
         fun onMoreClicked(post: Post)
         fun onPostLongPressed(post: Post)
+        fun onBookmarkClicked(post: Post)
+        fun onPostClicked(post: Post) // New callback for post clicks
     }
 
     var listener: PostListener? = null
@@ -103,103 +105,114 @@ class PostAdapter(
         private val likeIcon: ImageView = itemView.findViewById(R.id.likeIcon)
         private val postImage: ImageView = itemView.findViewById(R.id.postImage)
         private val locationIcon: ImageView = itemView.findViewById(R.id.locationIcon)
-    fun bind(post: Post) {
-       Log.d("PostAdapter", "Binding post: ${post.id}, userId: ${post.userId}")
+        private val bookmarkButton: View = itemView.findViewById(R.id.bookmarkButton)
+        
+        fun bind(post: Post) {
+            Log.d("PostAdapter", "Binding post: ${post.id}, userId: ${post.userId}")
 
-       if (post.userId.isBlank()) {
-           userName.text = "Unknown User"
-       } else {
-           // First check cache
-           val cachedName = userNameCache[post.userId]
-           if (cachedName != null) {
-               userName.text = cachedName
-           } else {
-               // Keep the current text while loading
-               lifecycleScope.launch {
-                   try {
-                       val fullName = userViewModel.GetUserFullName(post.userId)
-                       Log.d("PostAdapter", "Received fullName: $fullName for userId: ${post.userId}")
+            // Set click listener for the entire post
+            itemView.setOnClickListener {
+                listener?.onPostClicked(post)
+            }
 
-                       // Cache the username
-                       userNameCache[post.userId] = fullName
+            if (post.userId.isBlank()) {
+                userName.text = "Unknown User"
+            } else {
+                // First check cache
+                val cachedName = userNameCache[post.userId]
+                if (cachedName != null) {
+                    userName.text = cachedName
+                } else {
+                    // Keep the current text while loading
+                    lifecycleScope.launch {
+                        try {
+                            val fullName = userViewModel.GetUserFullName(post.userId)
+                            Log.d("PostAdapter", "Received fullName: $fullName for userId: ${post.userId}")
 
-                       // Only update if the ViewHolder is still bound to the same post
-                       val position = adapterPosition
-                       if (position != RecyclerView.NO_POSITION &&
-                           position < posts.size &&
-                           posts[position].id == post.id) {
-                           userName.text = fullName
-                       }
-                   } catch (e: Exception) {
-                       if (e is CancellationException) throw e
-                       Log.e("PostAdapter", "Error loading user name for userId: ${post.userId}", e)
-                   }
-               }
-           }
-       }
+                            // Cache the username
+                            userNameCache[post.userId] = fullName
 
-       // Set other post details
-       timestamp.text = getFormattedTimestamp(post.timestamp)
-       content.text = post.content
-       likeCount.text = "${post.likes}"
-       commentCount.text = "${post.comments}"
+                            // Only update if the ViewHolder is still bound to the same post
+                            val position = adapterPosition
+                            if (position != RecyclerView.NO_POSITION &&
+                                position < posts.size &&
+                                posts[position].id == post.id) {
+                                userName.text = fullName
+                            }
+                        } catch (e: Exception) {
+                            if (e is CancellationException) throw e
+                            Log.e("PostAdapter", "Error loading user name for userId: ${post.userId}", e)
+                        }
+                    }
+                }
+            }
 
-       // Handle post image
-       if (post.imageBase64.isNotBlank()) {
-           ImageUtils.base64ToBitmap(post.imageBase64)?.let { bitmap ->
-               postImage.setImageBitmap(bitmap)
-               postImage.visibility = View.VISIBLE
-           }
-       } else {
-           postImage.visibility = View.GONE
-       }
+            // Set other post details
+            timestamp.text = getFormattedTimestamp(post.timestamp)
+            content.text = post.content
+            likeCount.text = "${post.likes}"
+            commentCount.text = "${post.comments}"
 
-       // Handle location icon
-       locationIcon.visibility = if (post.latitude != null && post.longitude != null) {
-           View.VISIBLE
-       } else {
-           View.GONE
-       }
+            // Handle post image
+            if (post.imageBase64.isNotBlank()) {
+                ImageUtils.base64ToBitmap(post.imageBase64)?.let { bitmap ->
+                    postImage.setImageBitmap(bitmap)
+                    postImage.visibility = View.VISIBLE
+                }
+            } else {
+                postImage.visibility = View.GONE
+            }
 
-       // Set up click listeners
-       likeButton.setOnClickListener {
-           listener?.onLikeClicked(post)
-       }
+            // Handle location icon
+            locationIcon.visibility = if (post.latitude != null && post.longitude != null) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
 
-       commentButton.setOnClickListener {
-           listener?.onCommentClicked(post)
-       }
+            // Set up click listeners
+            likeButton.setOnClickListener {
+                listener?.onLikeClicked(post)
+            }
 
-       moreButton.setOnClickListener {
-           listener?.onMoreClicked(post)
-       }
+            bookmarkButton.setOnClickListener {
+                listener?.onBookmarkClicked(post)
+            }
 
-       // Set up long click listener for posts with location
-       if (post.latitude != null && post.longitude != null) {
-           itemView.setOnLongClickListener {
-               listener?.onPostLongPressed(post)
-               true
-           }
-       } else {
-           itemView.setOnLongClickListener(null)
-       }
+            commentButton.setOnClickListener {
+                listener?.onCommentClicked(post)
+            }
 
-       // Update like icon based on current user's like status
-       lifecycleScope.launch {
-           try {
-               userViewModel.getCurrentUser()?.uid?.let { currentUserId ->
-                   val isLiked = homeViewModel.isPostLikedByUser(post, currentUserId)
-                   likeIcon.setColorFilter(
-                       itemView.context.getColor(
-                           if (isLiked) R.color.primaryColor else R.color.gray_800
-                       )
-                   )
-               }
-           } catch (e: Exception) {
-               if (e is CancellationException) throw e
-               Log.e("PostAdapter", "Error checking like status", e)
-           }
-       }
-    }
+            moreButton.setOnClickListener {
+                listener?.onMoreClicked(post)
+            }
+
+            // Set up long click listener for posts with location
+            if (post.latitude != null && post.longitude != null) {
+                itemView.setOnLongClickListener {
+                    listener?.onPostLongPressed(post)
+                    true
+                }
+            } else {
+                itemView.setOnLongClickListener(null)
+            }
+
+            // Update like icon based on current user's like status
+            lifecycleScope.launch {
+                try {
+                    userViewModel.getCurrentUser()?.uid?.let { currentUserId ->
+                        val isLiked = homeViewModel.isPostLikedByUser(post, currentUserId)
+                        likeIcon.setColorFilter(
+                            itemView.context.getColor(
+                                if (isLiked) R.color.primaryColor else R.color.gray_800
+                            )
+                        )
+                    }
+                } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                    Log.e("PostAdapter", "Error checking like status", e)
+                }
+            }
         }
+    }
 }

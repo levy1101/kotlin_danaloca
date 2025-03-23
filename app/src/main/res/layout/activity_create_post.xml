@@ -97,18 +97,7 @@
                 android:textColor="@color/black"
                 android:textColorHint="#757575"
                 android:textSize="16sp" />
-
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/imagePreview"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginBottom="16dp"
-                android:scaleType="centerCrop"
-                android:visibility="gone"
-                android:adjustViewBounds="true"
-                app:shapeAppearanceOverlay="@style/RoundedImageView" />
-
+                
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -135,7 +124,20 @@
                     android:src="@drawable/ic_add"
                     app:tint="@color/black" />
 
-            </LinearLayout>
+            </LinearLayout>    
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/imagePreview"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="16dp"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
+                android:adjustViewBounds="true"
+                app:shapeAppearanceOverlay="@style/RoundedImageView" />
+
+            
 
             <TextView
                 android:id="@+id/locationText"

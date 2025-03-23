@@ -1,13 +1,11 @@
 package com.levy.danaloca.view.fragment
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -15,22 +13,17 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.levy.danaloca.R
 import com.levy.danaloca.adapter.PostAdapter
 import com.levy.danaloca.model.Post
-import com.levy.danaloca.utils.Status
-import com.levy.danaloca.view.SearchActivity
-import com.levy.danaloca.view.CreatePostActivity
-import com.levy.danaloca.view.MessagesActivity
-import com.levy.danaloca.view.LocationPreviewDialog
+import com.levy.danaloca.utils.Resource
 import com.levy.danaloca.viewmodel.HomeViewModel
 import com.levy.danaloca.viewmodel.UserViewModel
 
-class HomeFragment : Fragment(), ActionBarFragment.ActionBarListener, PostAdapter.PostListener {
+class HomeFragment : Fragment(), PostAdapter.PostListener {
 
-    private lateinit var postsRecyclerView: RecyclerView
-    private lateinit var actionBarFragment: ActionBarFragment
-    private lateinit var swipeRefresh: SwipeRefreshLayout
+    private val userViewModel: UserViewModel by activityViewModels()
+    private val homeViewModel: HomeViewModel by activityViewModels()
     private lateinit var postAdapter: PostAdapter
-    private val viewModel: HomeViewModel by viewModels()
-    private val userViewModel: UserViewModel by viewModels()
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var swipeRefresh: SwipeRefreshLayout
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,29 +36,35 @@ class HomeFragment : Fragment(), ActionBarFragment.ActionBarListener, PostAdapte
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        postsRecyclerView = view.findViewById(R.id.postsRecyclerView)
+        recyclerView = view.findViewById(R.id.postsRecyclerView)
         swipeRefresh = view.findViewById(R.id.swipeRefresh)
-        
-        setupActionBar()
         setupRecyclerView()
         setupSwipeRefresh()
-        observeViewModel()
-    }
 
-    private fun setupActionBar() {
-        actionBarFragment = childFragmentManager.findFragmentById(R.id.actionBarFragment) as ActionBarFragment
-        actionBarFragment.setActionBarListener(this)
+        homeViewModel.getPosts().observe(viewLifecycleOwner) { resource ->
+            when (resource) {
+                is Resource.Success -> {
+                    resource.data?.let { posts ->
+                        postAdapter.updatePosts(posts)
+                    }
+                    swipeRefresh.isRefreshing = false
+                }
+                is Resource.Loading -> {
+                    swipeRefresh.isRefreshing = true
+                }
+                is Resource.Error -> {
+                    swipeRefresh.isRefreshing = false
+                    // Handle error
+                }
+            }
+        }
     }
 
     private fun setupRecyclerView() {
-        postAdapter = PostAdapter(
-            lifecycleScope,
-            userViewModel,
-            viewModel
-        ).apply {
+        postAdapter = PostAdapter(lifecycleScope, userViewModel, homeViewModel).apply {
             listener = this@HomeFragment
         }
-        postsRecyclerView.apply {
+        recyclerView.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = postAdapter
         }
@@ -73,87 +72,50 @@ class HomeFragment : Fragment(), ActionBarFragment.ActionBarListener, PostAdapte
 
     private fun setupSwipeRefresh() {
         swipeRefresh.setOnRefreshListener {
-            viewModel.refreshPosts()
+            homeViewModel.refreshPosts()
         }
     }
 
-    private fun observeViewModel() {
-        viewModel.getPosts().observe(viewLifecycleOwner) { resource ->
-            when (resource.status) {
-                Status.LOADING -> {
-                    swipeRefresh.isRefreshing = true
-                }
-                Status.SUCCESS -> {
-                    swipeRefresh.isRefreshing = false
-                    resource.data?.let { posts ->
-                        postAdapter.updatePosts(posts)
-                    }
-                }
-                Status.ERROR -> {
-                    swipeRefresh.isRefreshing = false
-                    Toast.makeText(context, resource.message, Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-
-        viewModel.getLikeUpdateStatus().observe(viewLifecycleOwner) { resource ->
-            when (resource.status) {
-                Status.ERROR -> {
-                    Toast.makeText(context, resource.message, Toast.LENGTH_SHORT).show()
-                }
-                else -> {} // Loading and Success states are handled by the posts observer
-            }
-        }
-
-        viewModel.getDeleteStatus().observe(viewLifecycleOwner) { resource ->
-            when (resource.status) {
-                Status.ERROR -> {
-                    Toast.makeText(context, resource.message, Toast.LENGTH_SHORT).show()
-                }
-                else -> {} // Loading and Success states are handled by the posts observer
-            }
-        }
-    }
-
-    // ActionBarListener implementations
-    override fun onSearchClicked() {
-        startActivity(Intent(activity, SearchActivity::class.java))
-    }
-
-    override fun onAddClicked() {
-        startActivity(Intent(activity, CreatePostActivity::class.java))
-    }
-
-
-    // PostListener implementations
+    // PostAdapter.PostListener implementations
     override fun onLikeClicked(post: Post) {
-        userViewModel.getCurrentUser()?.uid?.let { userId ->
-            viewModel.toggleLike(post.id, userId)
-        } ?: run {
-            Toast.makeText(context, "Please sign in to like posts", Toast.LENGTH_SHORT).show()
+        lifecycleScope.launchWhenStarted {
+            userViewModel.getCurrentUser()?.uid?.let { userId ->
+                homeViewModel.toggleLike(post.id, userId)
+            }
         }
-    }
-
-    private fun updatePostLikeStatus(post: Post, isLiked: Boolean) {
-        postAdapter.notifyItemChanged(postAdapter.getPostPosition(post))
     }
 
     override fun onCommentClicked(post: Post) {
-        // TODO: Navigate to comments screen
-        Toast.makeText(context, "Comments feature coming soon", Toast.LENGTH_SHORT).show()
+        showPostDetail(post)
     }
 
     override fun onMoreClicked(post: Post) {
-        // TODO: Show bottom sheet with options
-        Toast.makeText(context, "More options coming soon", Toast.LENGTH_SHORT).show()
+        // Handle more options
     }
 
     override fun onPostLongPressed(post: Post) {
-        post.latitude?.let { lat ->
-            post.longitude?.let { lng ->
-                LocationPreviewDialog.newInstance(lat, lng)
-                    .show(childFragmentManager, "location_preview")
-            }
-        }
+        // Handle long press (e.g., show location on map)
+    }
+
+    override fun onBookmarkClicked(post: Post) {
+        // Bookmark functionality not implemented yet
+    }
+
+    override fun onPostClicked(post: Post) {
+        showPostDetail(post)
+    }
+
+    private fun showPostDetail(post: Post) {
+        val detailFragment = PostDetailFragment.newInstance(post.id)
+        parentFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                R.animator.slide_in_right,
+                R.animator.slide_out_left,
+                R.animator.slide_in_left,
+                R.animator.slide_out_right
+            )
+            .replace(R.id.nav_host_fragment, detailFragment)
+            .addToBackStack(null)
+            .commit()
     }
 }

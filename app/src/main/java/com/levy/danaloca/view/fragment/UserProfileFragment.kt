@@ -1,46 +1,61 @@
 package com.levy.danaloca.view.fragment
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.PopupMenu
+import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.levy.danaloca.R
-import com.levy.danaloca.databinding.FragmentUserprofileBinding
+import com.levy.danaloca.adapter.PostAdapter
 import com.levy.danaloca.model.Post
 import com.levy.danaloca.model.User
-import com.levy.danaloca.utils.Status
-import com.levy.danaloca.adapter.PostAdapter
-import com.levy.danaloca.view.LocationPreviewDialog
+import com.levy.danaloca.utils.Resource
+import com.levy.danaloca.view.custom.FriendActionsView
+import com.levy.danaloca.viewmodel.FriendsViewModel
 import com.levy.danaloca.viewmodel.HomeViewModel
 import com.levy.danaloca.viewmodel.UserViewModel
-import com.levy.danaloca.viewmodel.UserProfileViewModel
 
 class UserProfileFragment : Fragment(), PostAdapter.PostListener {
-    private var _binding: FragmentUserprofileBinding? = null
-    private val binding get() = _binding!!
-    private lateinit var viewModel: UserProfileViewModel
-    private lateinit var postAdapter: PostAdapter
-    private lateinit var homeViewModel: HomeViewModel
-    private var currentUserId: String = ""
-    private var profileUserId: String = ""
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        viewModel = UserProfileViewModel()
-        homeViewModel = ViewModelProvider(requireActivity())[HomeViewModel::class.java]
-        
-        // Get current user ID
-        FirebaseAuth.getInstance().currentUser?.let {
-            currentUserId = it.uid
+    private val userViewModel: UserViewModel by activityViewModels()
+    private val homeViewModel: HomeViewModel by activityViewModels()
+    private val friendsViewModel: FriendsViewModel by activityViewModels()
+    private lateinit var postAdapter: PostAdapter
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var swipeRefresh: SwipeRefreshLayout
+
+    // Profile info views
+    private lateinit var profileTitle: TextView
+    private lateinit var fullNameText: TextView
+    private lateinit var genderText: TextView
+    private lateinit var ageText: TextView
+    private lateinit var locationText: TextView
+    private lateinit var backButton: ImageButton
+    private lateinit var messageButton: ImageButton
+    private lateinit var friendActions: FriendActionsView
+
+    private var currentUserId: String? = null
+    private var userId: String? = null
+
+    companion object {
+        private const val ARG_USER_ID = "user_id"
+
+        fun newInstance(userId: String): UserProfileFragment {
+            return UserProfileFragment().apply {
+                arguments = Bundle().apply {
+                    putString(ARG_USER_ID, userId)
+                }
+            }
         }
     }
 
@@ -48,153 +63,53 @@ class UserProfileFragment : Fragment(), PostAdapter.PostListener {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentUserprofileBinding.inflate(inflater, container, false)
-        return binding.root
+    ): View? {
+        return inflater.inflate(R.layout.fragment_userprofile, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Get current user ID
+        currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+        userId = arguments?.getString(ARG_USER_ID)
+        
+        if (userId == null) {
+            parentFragmentManager.popBackStack()
+            return
+        }
+
+        initViews(view)
         setupRecyclerView()
-        setupObservers()
-        setupBackButton()
         setupSwipeRefresh()
+        setupFriendActions()
         setupMessageButton()
-
-        // Get userId from arguments and load profile
-        arguments?.getString("userId")?.let { userId ->
-            profileUserId = userId
-            Log.d("UserProfileFragment", "Loading profile for user: $userId")
-            
-            // Setup friend actions after we have both userIds
-            setupFriendActions()
-            
-            // Load the profile data and posts
-            viewModel.loadUserProfile(userId)
-        }
+        loadUserData()
     }
 
-    private fun setupRecyclerView() {
-        val userViewModel = ViewModelProvider(requireActivity())[UserViewModel::class.java]
-        postAdapter = PostAdapter(lifecycleScope, userViewModel, homeViewModel)
-        postAdapter.listener = this
-        binding.postsRecyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = postAdapter
-        }
-    }
+    private fun initViews(view: View) {
+        recyclerView = view.findViewById(R.id.posts_recycler_view)
+        swipeRefresh = view.findViewById(R.id.swipeRefreshLayout)
+        
+        // Initialize profile info views
+        profileTitle = view.findViewById(R.id.profile_title)
+        fullNameText = view.findViewById(R.id.tv_user_full_name)
+        genderText = view.findViewById(R.id.tv_user_gender)
+        ageText = view.findViewById(R.id.tv_user_age)
+        locationText = view.findViewById(R.id.tv_user_location)
+        backButton = view.findViewById(R.id.btn_back)
+        messageButton = view.findViewById(R.id.btn_message)
+        friendActions = view.findViewById(R.id.friend_actions)
 
-    private fun setupSwipeRefresh() {
-        binding.swipeRefreshLayout.setOnRefreshListener {
-            profileUserId.let { userId ->
-                viewModel.loadUserProfile(userId)
-            }
-        }
-    }
-
-    private fun setupObservers() {
-        // Observe user data
-        viewModel.user.observe(viewLifecycleOwner, Observer { result ->
-            when (result.status) {
-                Status.LOADING -> showLoading()
-                Status.SUCCESS -> {
-                    hideLoading()
-                    updateUIState()
-                }
-                Status.ERROR -> showError(result.message ?: "Unknown error")
-            }
-        })
-
-        // Observe friend requests
-        viewModel.friendRequests.observe(viewLifecycleOwner, Observer { result ->
-            when (result.status) {
-                Status.LOADING -> { /* Loading state - no action needed */ }
-                Status.SUCCESS -> updateUIState()
-                Status.ERROR -> Log.e("UserProfileFragment", "Error loading friend requests: ${result.message}")
-            }
-        })
-
-        // Observe operation state
-        viewModel.operationState.observe(viewLifecycleOwner, Observer { result ->
-            result?.let {
-                when (it.status) {
-                    Status.SUCCESS -> {
-                        // Force UI update after successful operation
-                        updateUIState()
-                    }
-                    Status.ERROR -> {
-                        showError(it.message ?: "Unknown error")
-                    }
-                    else -> {}
-                }
-                viewModel.resetOperationState()
-            }
-        })
-
-        // Observe user posts
-        viewModel.userPosts.observe(viewLifecycleOwner, Observer { result ->
-            when (result.status) {
-                Status.LOADING -> {
-                    binding.swipeRefreshLayout.isRefreshing = true
-                    Log.d("UserProfileFragment", "Loading posts...")
-                }
-                Status.SUCCESS -> {
-                    binding.swipeRefreshLayout.isRefreshing = false
-                    result.data?.let { posts ->
-                        Log.d("UserProfileFragment", "Received ${posts.size} posts")
-                        posts.forEach { post ->
-                            Log.d("UserProfileFragment", "Post: id=${post.id}, userId=${post.userId}, content=${post.content}")
-                        }
-                        postAdapter.updatePosts(posts)
-                    } ?: Log.d("UserProfileFragment", "Received null posts data")
-                }
-                Status.ERROR -> {
-                    binding.swipeRefreshLayout.isRefreshing = false
-                    val error = "Error loading posts: ${result.message}"
-                    Log.e("UserProfileFragment", error)
-                    showError(error)
-                }
-            }
-        })
-    }
-
-    private fun updateUIState() {
-        val userData = viewModel.user.value?.data
-        val friendRequestsData = viewModel.friendRequests.value?.data
-
-        if (userData != null) {
-            // Update basic user information
-            updateUI(userData)
-            
-            // Update friend actions state with both user and requests data
-            binding.friendActions.updateState(userData, friendRequestsData ?: emptyList())
-        }
-    }
-
-    private fun setupFriendActions() {
-        binding.friendActions.apply {
-            setUserIds(currentUserId, profileUserId)
-            setAddFriendListener { viewModel.sendFriendRequest(currentUserId, it) }
-            setCancelRequestListener { requestId -> viewModel.cancelFriendRequest(requestId, profileUserId) }
-            setAcceptRequestListener { request -> viewModel.acceptFriendRequest(request) }
-            setDeclineRequestListener { requestId, userId -> viewModel.declineFriendRequest(requestId, userId) }
-            setFriendOptionsListener { userId, view ->
-                showFriendOptionsMenu(userId, view)
-            }
-        }
-    }
-
-    private fun setupBackButton() {
-        binding.btnBack.setOnClickListener {
-            requireActivity().onBackPressed()
+        backButton.setOnClickListener {
+            parentFragmentManager.popBackStack()
         }
     }
 
     private fun setupMessageButton() {
-        binding.btnMessage.setOnClickListener {
+        messageButton.setOnClickListener {
             val bundle = Bundle().apply {
-                putString("userId", profileUserId)
+                putString("userId", userId)
             }
             findNavController().navigate(
                 R.id.action_userProfileFragment_to_chatFragment,
@@ -203,16 +118,20 @@ class UserProfileFragment : Fragment(), PostAdapter.PostListener {
         }
     }
 
-    private fun updateUI(user: User) {
-        binding.apply {
-            // Set user image (using placeholder for now)
-            userProfileImage.setImageResource(R.drawable.default_profile)
-            
-            // Set user info
-            tvUserFullName.text = user.fullName
-            tvUserGender.text = user.gender
-            tvUserAge.text = user.age
-            tvUserLocation.text = user.location.ifEmpty { "Not specified" }
+    private fun setupFriendActions() {
+        currentUserId?.let { currentId ->
+            userId?.let { profileId ->
+                friendActions.apply {
+                    setUserIds(currentId, profileId)
+                    setAddFriendListener { friendsViewModel.sendFriendRequest(currentId, it) }
+                    setCancelRequestListener { requestId -> friendsViewModel.cancelFriendRequest(requestId, profileId) }
+                    setAcceptRequestListener { request -> friendsViewModel.acceptFriendRequest(request) }
+                    setDeclineRequestListener { requestId, userId -> friendsViewModel.declineFriendRequest(requestId, userId) }
+                    setFriendOptionsListener { userId, view ->
+                        showFriendOptionsMenu(userId, view)
+                    }
+                }
+            }
         }
     }
 
@@ -222,11 +141,11 @@ class UserProfileFragment : Fragment(), PostAdapter.PostListener {
             setOnMenuItemClickListener { item ->
                 when (item.itemId) {
                     R.id.action_unfollow -> {
-                        viewModel.unfollowUser(currentUserId, userId)
+                        friendsViewModel.unfollowUser(currentUserId!!, userId)
                         true
                     }
                     R.id.action_remove -> {
-                        viewModel.removeFriend(currentUserId, userId)
+                        friendsViewModel.removeFriend(currentUserId!!, userId)
                         true
                     }
                     else -> false
@@ -236,52 +155,138 @@ class UserProfileFragment : Fragment(), PostAdapter.PostListener {
         }
     }
 
-    private fun showLoading() {
-        binding.apply {
-            infoCard.visibility = View.GONE
-            // You might want to add a ProgressBar in your layout
+    private fun setupRecyclerView() {
+        postAdapter = PostAdapter(lifecycleScope, userViewModel, homeViewModel).apply {
+            listener = this@UserProfileFragment
+        }
+        recyclerView.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = postAdapter
         }
     }
 
-    private fun hideLoading() {
-        binding.apply {
-            infoCard.visibility = View.VISIBLE
+    private fun setupSwipeRefresh() {
+        swipeRefresh.setOnRefreshListener {
+            loadUserData()
         }
     }
 
-    private fun showError(message: String) {
-        // You might want to show an error message to the user
-        binding.infoCard.visibility = View.GONE
-        Log.e("UserProfileFragment", "Error loading profile: $message")
-    }
+    private fun loadUserData() {
+        userId?.let { id ->
+            // Get user details
+            userViewModel.getUser(id)
+            userViewModel.user.observe(viewLifecycleOwner) { user ->
+                user?.let { updateProfileInfo(it) }
+            }
 
-    // PostAdapter.PostListener Implementation
-    override fun onLikeClicked(post: Post) {
-        homeViewModel.toggleLike(post.id, currentUserId)
-    }
+            // Load friend requests to update UI state
+            currentUserId?.let { currentId ->
+                friendsViewModel.loadFriendRequests(currentId)
+                friendsViewModel.friendRequests.observe(viewLifecycleOwner) { resource ->
+                    when (resource) {
+                        is Resource.Success -> {
+                            userViewModel.user.value?.let { user ->
+                                friendActions.updateState(user, resource.data)
+                            }
+                        }
+                        is Resource.Loading -> {
+                            // Handle loading state if needed
+                        }
+                        is Resource.Error -> {
+                            // Handle error state if needed
+                        }
+                    }
+                }
+            }
 
-    override fun onCommentClicked(post: Post) {
-        // Handle comment click if needed
-    }
+            // Load user's posts
+            homeViewModel.getPosts().observe(viewLifecycleOwner) { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                        val userPosts = resource.data?.filter { it.userId == id }
+                        postAdapter.updatePosts(userPosts ?: emptyList())
+                        swipeRefresh.isRefreshing = false
+                    }
+                    is Resource.Loading -> {
+                        swipeRefresh.isRefreshing = true
+                    }
+                    is Resource.Error -> {
+                        swipeRefresh.isRefreshing = false
+                    }
+                }
+            }
 
-    override fun onMoreClicked(post: Post) {
-        // Show options menu if post belongs to current user
-        if (post.userId == currentUserId) {
-            // Implement post options menu (edit, delete, etc.)
-        }
-    }
-
-    override fun onPostLongPressed(post: Post) {
-        post.latitude?.let { lat ->
-            post.longitude?.let { lng ->
-                LocationPreviewDialog.newInstance(lat, lng)
-                    .show(childFragmentManager, "location_preview")
+            // Observe friend operations state
+            friendsViewModel.operationState.observe(viewLifecycleOwner) { result ->
+                result?.let {
+                    when (it) {
+                        is Resource.Success -> {
+                            // Refresh friend requests after successful operation
+                            currentUserId?.let { currentId ->
+                                friendsViewModel.loadFriendRequests(currentId)
+                            }
+                        }
+                        is Resource.Error -> {
+                            // Handle error if needed
+                        }
+                        is Resource.Loading -> {
+                            // Handle loading state if needed
+                        }
+                    }
+                    friendsViewModel.resetOperationState()
+                }
             }
         }
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+    private fun updateProfileInfo(user: User) {
+        profileTitle.text = user.fullName
+        fullNameText.text = user.fullName.ifBlank { "Not set" }
+        genderText.text = user.gender.ifBlank { "Not set" }
+        ageText.text = user.age.ifBlank { "Not set" }
+        locationText.text = user.location.ifBlank { "Not set" }
+    }
+
+    // PostAdapter.PostListener implementations
+    override fun onLikeClicked(post: Post) {
+        lifecycleScope.launchWhenStarted {
+            userViewModel.getCurrentUser()?.uid?.let { userId ->
+                homeViewModel.toggleLike(post.id, userId)
+            }
+        }
+    }
+
+    override fun onCommentClicked(post: Post) {
+        showPostDetail(post)
+    }
+
+    override fun onMoreClicked(post: Post) {
+        // Handle more options
+    }
+
+    override fun onPostLongPressed(post: Post) {
+        // Handle long press
+    }
+
+    override fun onBookmarkClicked(post: Post) {
+        // Handle bookmark
+    }
+
+    override fun onPostClicked(post: Post) {
+        showPostDetail(post)
+    }
+
+    private fun showPostDetail(post: Post) {
+        val detailFragment = PostDetailFragment.newInstance(post.id)
+        parentFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                R.animator.slide_in_right,
+                R.animator.slide_out_left,
+                R.animator.slide_in_left,
+                R.animator.slide_out_right
+            )
+            .replace(R.id.nav_host_fragment, detailFragment)
+            .addToBackStack(null)
+            .commit()
     }
 }

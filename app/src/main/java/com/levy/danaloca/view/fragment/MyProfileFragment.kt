@@ -1,223 +1,166 @@
 package com.levy.danaloca.view.fragment
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ValueEventListener
 import com.levy.danaloca.R
-import com.levy.danaloca.model.User
-import com.levy.danaloca.model.Post
-import com.levy.danaloca.repository.UserRepository
-import com.levy.danaloca.repository.PostRepository
-import com.levy.danaloca.utils.Resource
-import com.levy.danaloca.utils.Status
-import com.levy.danaloca.utils.ImageUtils
 import com.levy.danaloca.adapter.PostAdapter
-import com.levy.danaloca.view.LocationPreviewDialog
-import com.levy.danaloca.viewmodel.UserViewModel
+import com.levy.danaloca.model.Post
+import com.levy.danaloca.model.User
+import com.levy.danaloca.utils.Resource
 import com.levy.danaloca.viewmodel.HomeViewModel
-import de.hdodenhof.circleimageview.CircleImageView
+import com.levy.danaloca.viewmodel.UserViewModel
+import kotlinx.coroutines.launch
 
 class MyProfileFragment : Fragment(), PostAdapter.PostListener {
 
-    private lateinit var userRepository: UserRepository
-    private lateinit var postRepository: PostRepository
-    private var currentUserId: String? = null
-
-    // ViewModels
-    private lateinit var userViewModel: UserViewModel
-    private lateinit var homeViewModel: HomeViewModel
-
-    // RecyclerView
-    private lateinit var recyclerView: RecyclerView
+    private val userViewModel: UserViewModel by activityViewModels()
+    private val homeViewModel: HomeViewModel by activityViewModels()
     private lateinit var postAdapter: PostAdapter
-    
-    // SwipeRefreshLayout
-    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var swipeRefresh: SwipeRefreshLayout
 
-    // UI Elements
-    private lateinit var profileImage: CircleImageView
-    private lateinit var tvFullName: TextView
-    private lateinit var tvEmail: TextView
-    private lateinit var tvPhoneNumber: TextView
-    private lateinit var tvGender: TextView
-    private lateinit var tvAge: TextView
-    private lateinit var tvBirthdate: TextView
-    private lateinit var tvLocation: TextView
+    // Profile info views
+    private lateinit var fullNameText: TextView
+    private lateinit var emailText: TextView
+    private lateinit var phoneText: TextView
+    private lateinit var genderText: TextView
+    private lateinit var ageText: TextView
+    private lateinit var birthdateText: TextView
+    private lateinit var locationText: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_myprofile, container, false)
+        return inflater.inflate(R.layout.fragment_myprofile, container, false)
+    }
 
-        // Initialize ViewModels
-        userViewModel = ViewModelProvider(requireActivity())[UserViewModel::class.java]
-        homeViewModel = ViewModelProvider(requireActivity())[HomeViewModel::class.java]
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        // Initialize repositories
-        userRepository = UserRepository()
-        postRepository = PostRepository()
-
-        // Get current user ID from Firebase Auth
-        currentUserId = FirebaseAuth.getInstance().currentUser?.uid
-        Log.d("ProfileFragment", "Current user ID: $currentUserId")
-
-        // Initialize UI elements
         initViews(view)
-
-        // Set up RecyclerView
-        recyclerView = view.findViewById(R.id.posts_recycler_view)
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        postAdapter = PostAdapter(lifecycleScope, userViewModel, homeViewModel)
-        postAdapter.listener = this
-        recyclerView.adapter = postAdapter
-
-        // Load user data and posts
+        setupRecyclerView()
+        setupSwipeRefresh()
         loadUserData()
-        loadUserPosts()
-
-        return view
     }
 
     private fun initViews(view: View) {
-        profileImage = view.findViewById(R.id.profile_image)
-        tvFullName = view.findViewById(R.id.tv_full_name)
-        tvEmail = view.findViewById(R.id.tv_email)
-        tvPhoneNumber = view.findViewById(R.id.tv_phone_number)
-        tvGender = view.findViewById(R.id.tv_gender)
-        tvAge = view.findViewById(R.id.tv_age)
-        tvBirthdate = view.findViewById(R.id.tv_birthdate)
-        tvLocation = view.findViewById(R.id.tv_location)
+        recyclerView = view.findViewById(R.id.posts_recycler_view)
+        swipeRefresh = view.findViewById(R.id.swipeRefreshLayout)
+        
+        // Initialize profile info views
+        fullNameText = view.findViewById(R.id.tv_full_name)
+        emailText = view.findViewById(R.id.tv_email)
+        phoneText = view.findViewById(R.id.tv_phone_number)
+        genderText = view.findViewById(R.id.tv_gender)
+        ageText = view.findViewById(R.id.tv_age)
+        birthdateText = view.findViewById(R.id.tv_birthdate)
+        locationText = view.findViewById(R.id.tv_location)
+    }
 
-        // Initialize SwipeRefreshLayout
-        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
-        swipeRefreshLayout.setOnRefreshListener {
+    private fun setupRecyclerView() {
+        postAdapter = PostAdapter(lifecycleScope, userViewModel, homeViewModel).apply {
+            listener = this@MyProfileFragment
+        }
+        recyclerView.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = postAdapter
+        }
+    }
+
+    private fun setupSwipeRefresh() {
+        swipeRefresh.setOnRefreshListener {
             loadUserData()
-            loadUserPosts()
         }
     }
 
     private fun loadUserData() {
-        if (currentUserId.isNullOrEmpty()) {
-            showError("User not logged in")
-            swipeRefreshLayout.isRefreshing = false
-            return
-        }
-
-        Log.d("ProfileFragment", "Loading user data for ID: $currentUserId")
-        userRepository.getUser(currentUserId!!).addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.exists()) {
-                    val user = snapshot.getValue(User::class.java)
-                    user?.let {
-                        displayUserData(it)
-                    } ?: showError("User data is null")
-                } else {
-                    showError("User data not found")
-                }
-                swipeRefreshLayout.isRefreshing = false
+        userViewModel.getCurrentUser()?.let { firebaseUser ->
+            // Get user details
+            userViewModel.getUser(firebaseUser.uid)
+            userViewModel.user.observe(viewLifecycleOwner) { user ->
+                user?.let { updateProfileInfo(it) }
             }
 
-            override fun onCancelled(error: DatabaseError) {
-                showError("Error loading user data: ${error.message}")
-                Log.e("ProfileFragment", "Database error: ${error.message}")
-                swipeRefreshLayout.isRefreshing = false
-            }
-        })
-    }
-
-    private fun displayUserData(user: User) {
-        tvFullName.text = user.fullName
-        tvEmail.text = user.email
-        tvPhoneNumber.text = user.phoneNumber
-        tvGender.text = user.gender
-        tvAge.text = user.age
-        tvBirthdate.text = user.birthdate
-        tvLocation.text = user.location
-
-        // Display avatar
-        if (user.avatar.isNotEmpty()) {
-            val bitmap = ImageUtils.base64ToBitmap(user.avatar)
-            bitmap?.let {
-                profileImage.setImageBitmap(it)
-            }
-        }
-    }
-
-    private fun loadUserPosts() {
-        if (currentUserId.isNullOrEmpty()) {
-            showError("User not logged in")
-            swipeRefreshLayout.isRefreshing = false
-            return
-        }
-
-        Log.d("ProfileFragment", "Loading posts for user ID: $currentUserId")
-        postRepository.getPosts().observe(viewLifecycleOwner) { resource ->
-            when (resource.status) {
-                Status.SUCCESS -> {
-                    val posts = resource.data
-                    if (posts != null) {
-                        // Filter posts for current user
-                        val userPosts = posts.filter { it.userId == currentUserId }
-                        Log.d("ProfileFragment", "Found ${userPosts.size} posts for current user")
-                        // Update adapter with filtered posts
-                        postAdapter.updatePosts(userPosts)
+            // Load user's posts
+            homeViewModel.getPosts().observe(viewLifecycleOwner) { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                        val userPosts = resource.data?.filter { it.userId == firebaseUser.uid }
+                        postAdapter.updatePosts(userPosts ?: emptyList())
+                        swipeRefresh.isRefreshing = false
                     }
-                    swipeRefreshLayout.isRefreshing = false
-                }
-                Status.ERROR -> {
-                    showError("Error loading posts: ${resource.message}")
-                    swipeRefreshLayout.isRefreshing = false
-                }
-                Status.LOADING -> {
-                    Log.d("ProfileFragment", "Loading posts...")
+                    is Resource.Loading -> {
+                        swipeRefresh.isRefreshing = true
+                    }
+                    is Resource.Error -> {
+                        swipeRefresh.isRefreshing = false
+                    }
                 }
             }
         }
     }
 
-    private fun showError(message: String) {
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-        Log.e("ProfileFragment", message)
+    private fun updateProfileInfo(user: User) {
+        fullNameText.text = user.fullName.ifBlank { "Not set" }
+        emailText.text = user.email.ifBlank { "Not set" }
+        phoneText.text = user.phoneNumber.ifBlank { "Not set" }
+        genderText.text = user.gender.ifBlank { "Not set" }
+        ageText.text = user.age.ifBlank { "Not set" }
+        birthdateText.text = user.birthdate.ifBlank { "Not set" }
+        locationText.text = user.location.ifBlank { "Not set" }
     }
 
-    // PostAdapter.PostListener Interface Implementation
+    // PostAdapter.PostListener implementations
     override fun onLikeClicked(post: Post) {
-        currentUserId?.let { userId ->
-            homeViewModel.toggleLike(post.id, userId)
+        lifecycleScope.launchWhenStarted {
+            userViewModel.getCurrentUser()?.uid?.let { userId ->
+                homeViewModel.toggleLike(post.id, userId)
+            }
         }
     }
 
     override fun onCommentClicked(post: Post) {
-        // Handle comment click if needed
+        showPostDetail(post)
     }
 
     override fun onMoreClicked(post: Post) {
-        // Handle more options click if needed
+        // Handle more options
     }
 
     override fun onPostLongPressed(post: Post) {
-        post.latitude?.let { lat ->
-            post.longitude?.let { lng ->
-                LocationPreviewDialog.newInstance(lat, lng)
-                    .show(childFragmentManager, "location_preview")
-            }
-        }
+        // Handle long press
+    }
+
+    override fun onBookmarkClicked(post: Post) {
+        // Handle bookmark
+    }
+
+    override fun onPostClicked(post: Post) {
+        showPostDetail(post)
+    }
+
+    private fun showPostDetail(post: Post) {
+        val detailFragment = PostDetailFragment.newInstance(post.id)
+        parentFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                R.animator.slide_in_right,
+                R.animator.slide_out_left,
+                R.animator.slide_in_left,
+                R.animator.slide_out_right
+            )
+            .replace(R.id.nav_host_fragment, detailFragment)
+            .addToBackStack(null)
+            .commit()
     }
 }

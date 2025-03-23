@@ -8,7 +8,6 @@ import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
@@ -86,11 +85,18 @@ class FriendsFragment : Fragment() {
                 showFriendOptionsMenu(userId, view)
             },
             onItemClick = { userId ->
-                // Navigate to user profile with userId using Bundle
-                val bundle = Bundle().apply {
-                    putString("userId", userId)
-                }
-                findNavController().navigate(R.id.action_nav_friends_to_user_profile, bundle)
+                // Navigate to UserProfileFragment
+                val userProfileFragment = UserProfileFragment.newInstance(userId)
+                parentFragmentManager.beginTransaction()
+                    .setCustomAnimations(
+                        R.animator.slide_in_right,
+                        R.animator.slide_out_left,
+                        R.animator.slide_in_left,
+                        R.animator.slide_out_right
+                    )
+                    .replace(R.id.nav_host_fragment, userProfileFragment)
+                    .addToBackStack(null)
+                    .commit()
             }
         )
         

@@ -1,54 +1,91 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="8dp">
+    android:paddingHorizontal="8dp"
+    android:paddingVertical="4dp">
 
-    <!-- Sender Message -->
-    <androidx.cardview.widget.CardView
+    <!-- Received Message Layout -->
+    <LinearLayout
+        android:id="@+id/received_message_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/sender_avatar"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/default_profile"
+            app:civ_border_color="#EEEEEE"
+            app:civ_border_width="1dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="4dp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/received_message_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/message_bubble_received"
+                android:maxWidth="260dp"
+                android:textColor="#000000"
+                android:textSize="14sp"
+                tools:text="This is a received message" />
+
+            <TextView
+                android:id="@+id/received_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="2dp"
+                android:textColor="#757575"
+                android:textSize="10sp"
+                tools:text="10:30 AM" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Sent Message Layout -->
+    <LinearLayout
         android:id="@+id/sent_message_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="64dp"
+        android:orientation="vertical"
         android:visibility="gone"
-        app:cardBackgroundColor="#E3F2FD"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="2dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible">
 
         <TextView
             android:id="@+id/sent_message_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@drawable/message_bubble_sent"
             android:maxWidth="260dp"
-            android:padding="12dp"
-            android:textColor="#000000"
-            android:textSize="16sp" />
-    </androidx.cardview.widget.CardView>
-
-    <!-- Receiver Message -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/received_message_layout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="64dp"
-        android:visibility="gone"
-        app:cardBackgroundColor="#F5F5F5"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="2dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            tools:text="This is a sent message" />
 
         <TextView
-            android:id="@+id/received_message_text"
+            android:id="@+id/sent_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:maxWidth="260dp"
-            android:padding="12dp"
-            android:textColor="#000000"
-            android:textSize="16sp" />
-    </androidx.cardview.widget.CardView>
+            android:layout_gravity="end"
+            android:layout_marginEnd="4dp"
+            android:layout_marginTop="2dp"
+            android:textColor="#757575"
+            android:textSize="10sp"
+            tools:text="10:30 AM" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

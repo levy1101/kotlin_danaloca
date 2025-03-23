@@ -8,8 +8,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
+import com.levy.danaloca.model.FriendRequest
+import com.levy.danaloca.model.FriendRequestStatus
 import com.levy.danaloca.model.User
 import com.levy.danaloca.repository.UserRepository
+import com.levy.danaloca.utils.Resource
 import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -182,4 +185,6 @@ class UserViewModel : ViewModel() {
     }
 
     fun getCurrentUser() = FirebaseAuth.getInstance().currentUser
+
+
 }

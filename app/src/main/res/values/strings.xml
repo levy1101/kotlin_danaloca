@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Danaloca</string>
+    <string name="app_name">DanaLoca</string>
     <string name="login_prompt">Already have an account? Login here</string>
     <string name="register_prompt">Don\'t have an account? Register here</string>
     <string name="whats_on_your_mind">What\'s on your mind?</string>
@@ -13,4 +13,6 @@
     <string name="cancel_request">Cancel Request</string>
     <string name="accept">Accept</string>
     <string name="following">Following</string>
+    <string name="channel_name">Default Channel</string>
+    <string name="channel_description">Default notification channel for DanaLoca</string>
 </resources>
