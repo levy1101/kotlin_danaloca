@@ -22,7 +22,7 @@
             android:id="@+id/sender_avatar"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:src="@drawable/default_profile"
+            android:src="@drawable/default_avatar"
             app:civ_border_color="#EEEEEE"
             app:civ_border_width="1dp"
             android:layout_marginEnd="8dp"

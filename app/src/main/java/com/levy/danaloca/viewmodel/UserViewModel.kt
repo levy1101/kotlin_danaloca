@@ -183,8 +183,11 @@ class UserViewModel : ViewModel() {
                 _error.value = e.message
             }
     }
+fun getCurrentUser() = FirebaseAuth.getInstance().currentUser
 
-    fun getCurrentUser() = FirebaseAuth.getInstance().currentUser
+fun updateUserAvatar(userId: String, base64Image: String) {
+    updateUser(userId, mapOf("avatar" to base64Image))
+}
 
 
 }

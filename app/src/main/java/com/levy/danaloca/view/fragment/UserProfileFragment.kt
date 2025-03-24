@@ -7,32 +7,18 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.PopupMenu
 import android.widget.TextView
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.levy.danaloca.R
-import com.levy.danaloca.adapter.PostAdapter
-import com.levy.danaloca.model.Post
 import com.levy.danaloca.model.User
 import com.levy.danaloca.utils.Resource
 import com.levy.danaloca.view.custom.FriendActionsView
 import com.levy.danaloca.viewmodel.FriendsViewModel
-import com.levy.danaloca.viewmodel.HomeViewModel
-import com.levy.danaloca.viewmodel.UserViewModel
 
-class UserProfileFragment : Fragment(), PostAdapter.PostListener {
+class UserProfileFragment : PostFragment() {
 
-    private val userViewModel: UserViewModel by activityViewModels()
-    private val homeViewModel: HomeViewModel by activityViewModels()
     private val friendsViewModel: FriendsViewModel by activityViewModels()
-    private lateinit var postAdapter: PostAdapter
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var swipeRefresh: SwipeRefreshLayout
 
     // Profile info views
     private lateinit var profileTitle: TextView
@@ -67,6 +53,9 @@ class UserProfileFragment : Fragment(), PostAdapter.PostListener {
         return inflater.inflate(R.layout.fragment_userprofile, container, false)
     }
 
+    override fun getRecyclerViewId() = R.id.posts_recycler_view
+    override fun getSwipeRefreshId() = R.id.swipeRefreshLayout
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -79,18 +68,13 @@ class UserProfileFragment : Fragment(), PostAdapter.PostListener {
             return
         }
 
-        initViews(view)
-        setupRecyclerView()
-        setupSwipeRefresh()
+        initProfileViews(view)
         setupFriendActions()
         setupMessageButton()
         loadUserData()
     }
 
-    private fun initViews(view: View) {
-        recyclerView = view.findViewById(R.id.posts_recycler_view)
-        swipeRefresh = view.findViewById(R.id.swipeRefreshLayout)
-        
+    private fun initProfileViews(view: View) {
         // Initialize profile info views
         profileTitle = view.findViewById(R.id.profile_title)
         fullNameText = view.findViewById(R.id.tv_user_full_name)
@@ -155,17 +139,7 @@ class UserProfileFragment : Fragment(), PostAdapter.PostListener {
         }
     }
 
-    private fun setupRecyclerView() {
-        postAdapter = PostAdapter(lifecycleScope, userViewModel, homeViewModel).apply {
-            listener = this@UserProfileFragment
-        }
-        recyclerView.apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = postAdapter
-        }
-    }
-
-    private fun setupSwipeRefresh() {
+    override fun setupSwipeRefresh() {
         swipeRefresh.setOnRefreshListener {
             loadUserData()
         }
@@ -199,23 +173,6 @@ class UserProfileFragment : Fragment(), PostAdapter.PostListener {
                 }
             }
 
-            // Load user's posts
-            homeViewModel.getPosts().observe(viewLifecycleOwner) { resource ->
-                when (resource) {
-                    is Resource.Success -> {
-                        val userPosts = resource.data?.filter { it.userId == id }
-                        postAdapter.updatePosts(userPosts ?: emptyList())
-                        swipeRefresh.isRefreshing = false
-                    }
-                    is Resource.Loading -> {
-                        swipeRefresh.isRefreshing = true
-                    }
-                    is Resource.Error -> {
-                        swipeRefresh.isRefreshing = false
-                    }
-                }
-            }
-
             // Observe friend operations state
             friendsViewModel.operationState.observe(viewLifecycleOwner) { result ->
                 result?.let {
@@ -236,6 +193,12 @@ class UserProfileFragment : Fragment(), PostAdapter.PostListener {
                     friendsViewModel.resetOperationState()
                 }
             }
+            
+            // Posts will be loaded by PostFragment's observePosts
+            observePosts { posts ->
+                val userPosts = posts.filter { it.userId == id }
+                postAdapter.updatePosts(userPosts)
+            }
         }
     }
 
@@ -247,46 +210,5 @@ class UserProfileFragment : Fragment(), PostAdapter.PostListener {
         locationText.text = user.location.ifBlank { "Not set" }
     }
 
-    // PostAdapter.PostListener implementations
-    override fun onLikeClicked(post: Post) {
-        lifecycleScope.launchWhenStarted {
-            userViewModel.getCurrentUser()?.uid?.let { userId ->
-                homeViewModel.toggleLike(post.id, userId)
-            }
-        }
-    }
-
-    override fun onCommentClicked(post: Post) {
-        showPostDetail(post)
-    }
-
-    override fun onMoreClicked(post: Post) {
-        // Handle more options
-    }
-
-    override fun onPostLongPressed(post: Post) {
-        // Handle long press
-    }
-
-    override fun onBookmarkClicked(post: Post) {
-        // Handle bookmark
-    }
-
-    override fun onPostClicked(post: Post) {
-        showPostDetail(post)
-    }
-
-    private fun showPostDetail(post: Post) {
-        val detailFragment = PostDetailFragment.newInstance(post.id)
-        parentFragmentManager.beginTransaction()
-            .setCustomAnimations(
-                R.animator.slide_in_right,
-                R.animator.slide_out_left,
-                R.animator.slide_in_left,
-                R.animator.slide_out_right
-            )
-            .replace(R.id.nav_host_fragment, detailFragment)
-            .addToBackStack(null)
-            .commit()
-    }
+    // Location preview functionality is now handled by PostFragment
 }

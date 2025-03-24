@@ -44,7 +44,7 @@
                 android:layout_width="120dp"
                 android:layout_height="120dp"
                 android:layout_marginTop="32dp"
-                android:src="@drawable/default_profile"
+                android:src="@drawable/default_avatar"
                 app:civ_border_color="#DDDDDD"
                 app:civ_border_width="2dp"
                 app:layout_constraintEnd_toEndOf="parent"

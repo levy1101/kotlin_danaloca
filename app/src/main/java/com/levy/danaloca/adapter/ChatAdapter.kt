@@ -57,7 +57,7 @@ class ChatAdapter : RecyclerView.Adapter<ChatAdapter.ChatViewHolder>() {
                 // Example:
                 // Glide.with(binding.senderAvatar)
                 //     .load(message.senderPhotoUrl)
-                //     .placeholder(R.drawable.default_profile)
+                //     .placeholder(R.drawable.default_avatar)
                 //     .into(binding.senderAvatar)
             }
         }
