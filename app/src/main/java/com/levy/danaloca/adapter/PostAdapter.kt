@@ -30,6 +30,7 @@ class PostAdapter(
     private val timeFormat = SimpleDateFormat("EEEE, HH:mm", Locale.getDefault())
     private val monthDayFormat = SimpleDateFormat("MMMM d", Locale.getDefault())
     private val userNameCache = mutableMapOf<String, String>()  // Cache for usernames
+    private val userAvatarCache = mutableMapOf<String, String>()  // Cache for user avatars
 
     private fun getFormattedTimestamp(timestamp: Long): String {
         val now = System.currentTimeMillis()
@@ -77,6 +78,7 @@ class PostAdapter(
         posts.clear()
         posts.addAll(newPosts)
         userNameCache.clear() // Clear the cache when updating all posts
+        userAvatarCache.clear() // Clear avatar cache too
         notifyDataSetChanged()
     }
 
@@ -94,6 +96,7 @@ class PostAdapter(
     override fun getItemCount() = posts.size
 
     inner class PostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val userAvatar: ImageView = itemView.findViewById(R.id.userAvatar)
         private val userName: TextView = itemView.findViewById(R.id.userName)
         private val timestamp: TextView = itemView.findViewById(R.id.timestamp)
         private val content: TextView = itemView.findViewById(R.id.content)
@@ -142,6 +145,42 @@ class PostAdapter(
                         } catch (e: Exception) {
                             if (e is CancellationException) throw e
                             Log.e("PostAdapter", "Error loading user name for userId: ${post.userId}", e)
+                        }
+                    }
+                }
+            }
+
+            // Load user avatar
+            if (post.userId.isNotBlank()) {
+                // First check avatar cache
+                val cachedAvatar = userAvatarCache[post.userId]
+                if (cachedAvatar != null) {
+                    if (cachedAvatar.isNotBlank()) {
+                        ImageUtils.base64ToBitmap(cachedAvatar)?.let { bitmap ->
+                            userAvatar.setImageBitmap(bitmap)
+                        }
+                    }
+                } else {
+                    lifecycleScope.launch {
+                        try {
+                            val avatarBase64 = userViewModel.GetUserAvatar(post.userId)
+                            // Cache the avatar
+                            userAvatarCache[post.userId] = avatarBase64
+
+                            // Only update if the ViewHolder is still bound to the same post
+                            val position = adapterPosition
+                            if (position != RecyclerView.NO_POSITION &&
+                                position < posts.size &&
+                                posts[position].id == post.id &&
+                                avatarBase64.isNotBlank()
+                            ) {
+                                ImageUtils.base64ToBitmap(avatarBase64)?.let { bitmap ->
+                                    userAvatar.setImageBitmap(bitmap)
+                                }
+                            }
+                        } catch (e: Exception) {
+                            if (e is CancellationException) throw e
+                            Log.e("PostAdapter", "Error loading user avatar for userId: ${post.userId}", e)
                         }
                     }
                 }

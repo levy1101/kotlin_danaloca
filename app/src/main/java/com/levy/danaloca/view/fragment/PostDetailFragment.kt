@@ -28,6 +28,7 @@ class PostDetailFragment : Fragment() {
 
     private lateinit var toolbar: Toolbar
     private lateinit var toolbarUserName: TextView
+    private lateinit var userAvatar: ImageView
     private lateinit var userName: TextView
     private lateinit var timestamp: TextView
     private lateinit var content: TextView
@@ -72,6 +73,7 @@ class PostDetailFragment : Fragment() {
     private fun initViews(view: View) {
         toolbar = view.findViewById(R.id.toolbar)
         toolbarUserName = view.findViewById(R.id.toolbarUserName)
+        userAvatar = view.findViewById(R.id.userAvatar)
         userName = view.findViewById(R.id.userName)
         timestamp = view.findViewById(R.id.timestamp)
         content = view.findViewById(R.id.content)
@@ -146,6 +148,18 @@ class PostDetailFragment : Fragment() {
             } catch (e: Exception) {
                 toolbarUserName.text = "Unknown User"
                 userName.text = "Unknown User"
+            }
+
+            // Load and display user avatar
+            try {
+                val avatarBase64 = userViewModel.GetUserAvatar(post.userId)
+                if (avatarBase64.isNotBlank()) {
+                    ImageUtils.base64ToBitmap(avatarBase64)?.let { bitmap ->
+                        userAvatar.setImageBitmap(bitmap)
+                    }
+                }
+            } catch (e: Exception) {
+                // Keep default avatar on error
             }
         }
 

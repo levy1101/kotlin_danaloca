@@ -22,6 +22,31 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 class UserViewModel : ViewModel() {
     private val repository = UserRepository()
     
+    suspend fun GetUserAvatar(userId: String): String {
+        return suspendCancellableCoroutine { continuation ->
+            repository.getUser(userId).addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (!snapshot.exists()) {
+                        continuation.resume("") { }
+                        return
+                    }
+                    
+                    val user = snapshot.getValue(User::class.java)
+                    if (user == null) {
+                        continuation.resume("") { }
+                        return
+                    }
+
+                    continuation.resume(user.avatar) { }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    continuation.resume("") { }
+                }
+            })
+        }
+    }
+
     suspend fun GetUserFullName(userId: String): String {
         return suspendCancellableCoroutine { continuation ->
             Log.d("UserViewModel", "Getting user name for ID: $userId")
