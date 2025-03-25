@@ -1,12 +1,10 @@
 package com.levy.danaloca.view.activity
 
 import android.Manifest
-import android.app.Activity
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
@@ -15,7 +13,6 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.levy.danaloca.R
@@ -31,16 +28,16 @@ class CreatePostActivity : AppCompatActivity() {
     private lateinit var imagePreview: ImageView
     private lateinit var locationText: TextView
     private lateinit var postButton: Button
-    private val viewModel: CreatePostViewModel by viewModels()
+    private lateinit var viewModel: CreatePostViewModel
     
-    private var selectedImage: Bitmap? = null
+    private var selectedImage: android.graphics.Bitmap? = null
     private var selectedLatitude: Double? = null
     private var selectedLongitude: Double? = null
 
     private val pickLocation = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
+        if (result.resultCode == RESULT_OK) {
             result.data?.let { data ->
                 selectedLatitude = data.getDoubleExtra(MapLocationActivity.EXTRA_LATITUDE, 0.0)
                 selectedLongitude = data.getDoubleExtra(MapLocationActivity.EXTRA_LONGITUDE, 0.0)
@@ -50,29 +47,29 @@ class CreatePostActivity : AppCompatActivity() {
         }
     }
 
-    private val requestPermissionLauncher = registerForActivityResult(
+    private val requestPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            openImagePicker()
+            pickImage.launch("image/*")
         } else {
             Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
         }
     }
 
     private val pickImage = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.data?.let { uri ->
-                try {
-                    selectedImage = MediaStore.Images.Media.getBitmap(contentResolver, uri)
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            try {
+                contentResolver.openInputStream(it)?.use { stream ->
+                    selectedImage = BitmapFactory.decodeStream(stream)
                     imagePreview.setImageBitmap(selectedImage)
                     imagePreview.visibility = View.VISIBLE
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show()
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -81,58 +78,60 @@ class CreatePostActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_post)
 
+        viewModel = CreatePostViewModel.create(this)
         initViews()
         setupListeners()
         observeViewModel()
     }
-private fun initViews() {
-    contentEditText = findViewById(R.id.contentEditText)
-    backButton = findViewById(R.id.backButton)
-    addImageButton = findViewById(R.id.addImageButton)
-    addLocationButton = findViewById(R.id.addLocationButton)
-    imagePreview = findViewById(R.id.imagePreview)
-    locationText = findViewById(R.id.locationText)
-    postButton = findViewById(R.id.postButton)
-}
 
-private fun setupListeners() {
-    backButton.setOnClickListener {
-        finish()
+    private fun initViews() {
+        contentEditText = findViewById(R.id.contentEditText)
+        backButton = findViewById(R.id.backButton)
+        addImageButton = findViewById(R.id.addImageButton)
+        addLocationButton = findViewById(R.id.addLocationButton)
+        imagePreview = findViewById(R.id.imagePreview)
+        locationText = findViewById(R.id.locationText)
+        postButton = findViewById(R.id.postButton)
     }
 
-    addImageButton.setOnClickListener {
-        checkPermissionAndOpenPicker()
-    }
+    private fun setupListeners() {
+        backButton.setOnClickListener {
+            finish()
+        }
 
-    addLocationButton.setOnClickListener {
-        pickLocation.launch(Intent(this, MapLocationActivity::class.java))
-    }
+        addImageButton.setOnClickListener {
+            checkPermissionAndOpenPicker()
+        }
 
-    postButton.setOnClickListener {
-        val content = contentEditText.text.toString()
-        selectedImage?.let { bitmap ->
-            viewModel.createPostWithImage(
+        addLocationButton.setOnClickListener {
+            pickLocation.launch(android.content.Intent(this, MapLocationActivity::class.java))
+        }
+
+        postButton.setOnClickListener {
+            val content = contentEditText.text.toString()
+            selectedImage?.let { bitmap ->
+                viewModel.createPostWithImage(
+                    content = content,
+                    bitmap = bitmap,
+                    latitude = selectedLatitude,
+                    longitude = selectedLongitude
+                )
+            } ?: viewModel.createPost(
                 content = content,
-                bitmap = bitmap,
                 latitude = selectedLatitude,
                 longitude = selectedLongitude
             )
-        } ?: viewModel.createPost(
-            content = content,
-            latitude = selectedLatitude,
-            longitude = selectedLongitude
-        )
-        postButton.isEnabled = false
-    }
+            postButton.isEnabled = false
+        }
 
-    contentEditText.setOnFocusChangeListener { _, hasFocus ->
-        if (hasFocus) {
-            contentEditText.hint = ""
-        } else if (contentEditText.text.isBlank()) {
-            contentEditText.hint = getString(R.string.whats_on_your_mind)
+        contentEditText.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                contentEditText.hint = ""
+            } else if (contentEditText.text.isBlank()) {
+                contentEditText.hint = getString(R.string.whats_on_your_mind)
+            }
         }
     }
-}
 
     private fun checkPermissionAndOpenPicker() {
         when {
@@ -140,17 +139,12 @@ private fun setupListeners() {
                 this,
                 Manifest.permission.READ_EXTERNAL_STORAGE
             ) == PackageManager.PERMISSION_GRANTED -> {
-                openImagePicker()
+                pickImage.launch("image/*")
             }
             else -> {
-                requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                requestPermission.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
             }
         }
-    }
-
-    private fun openImagePicker() {
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        pickImage.launch(intent)
     }
 
     private fun observeViewModel() {

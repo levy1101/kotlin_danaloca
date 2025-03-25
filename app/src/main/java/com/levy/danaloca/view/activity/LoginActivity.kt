@@ -35,7 +35,7 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
 
         auth = FirebaseAuth.getInstance()
-        viewModel = ViewModelProvider(this)[UserViewModel::class.java]
+        viewModel = ViewModelProvider(this).get(UserViewModel::class.java)
 
         // Check if user is already signed in
         if (auth.currentUser != null) {

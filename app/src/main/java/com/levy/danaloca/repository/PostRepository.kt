@@ -1,5 +1,6 @@
 package com.levy.danaloca.repository
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
@@ -10,8 +11,11 @@ import com.google.firebase.database.ValueEventListener
 import com.levy.danaloca.model.Post
 import com.levy.danaloca.utils.Resource
 import com.levy.danaloca.utils.ImageUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-class PostRepository {
+class PostRepository(private val context: Context) {
     private val database = FirebaseDatabase.getInstance()
     private val postsRef = database.reference.child("posts")
 
@@ -95,23 +99,25 @@ class PostRepository {
         val result = MutableLiveData<Resource<Boolean>>()
         result.value = Resource.loading(null)
 
-        try {
-            // Convert bitmap to base64
-            val base64Image = ImageUtils.bitmapToBase64(bitmap)
-            
-            // Create new post with base64 image
-            val postWithImage = post.copy(imageBase64 = base64Image)
-            
-            // Save to Firebase
-            postsRef.child(post.id).setValue(postWithImage)
-                .addOnSuccessListener {
-                    result.value = Resource.success(true)
-                }
-                .addOnFailureListener { e ->
-                    result.value = Resource.error(e.message ?: "Error creating post with image", null)
-                }
-        } catch (e: Exception) {
-            result.value = Resource.error("Error processing image: ${e.message}", null)
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Upload image to Cloudinary
+                val imageUrl = ImageUtils.uploadImage(context, bitmap, "posts")
+                
+                // Create new post with image URL
+                val postWithImage = post.copy(imageUrl = imageUrl)
+                
+                // Save to Firebase
+                postsRef.child(post.id).setValue(postWithImage)
+                    .addOnSuccessListener {
+                        result.postValue(Resource.success(true))
+                    }
+                    .addOnFailureListener { e ->
+                        result.postValue(Resource.error(e.message ?: "Error creating post with image", null))
+                    }
+            } catch (e: Exception) {
+                result.postValue(Resource.error("Error uploading image: ${e.message}", null))
+            }
         }
 
         return result

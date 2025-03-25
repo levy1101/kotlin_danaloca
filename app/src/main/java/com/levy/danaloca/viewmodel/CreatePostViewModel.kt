@@ -1,5 +1,6 @@
 package com.levy.danaloca.viewmodel
 
+import android.content.Context
 import android.graphics.Bitmap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -10,8 +11,8 @@ import com.levy.danaloca.repository.PostRepository
 import com.levy.danaloca.utils.Resource
 import java.util.UUID
 
-class CreatePostViewModel : ViewModel() {
-    private val postRepository = PostRepository()
+class CreatePostViewModel(context: Context) : ViewModel() {
+    private val postRepository = PostRepository(context)
     private val auth = FirebaseAuth.getInstance()
 
     private val createPostStatus = MutableLiveData<Resource<Boolean>>()
@@ -66,6 +67,12 @@ class CreatePostViewModel : ViewModel() {
 
         postRepository.createPostWithImage(post, bitmap).observeForever { result ->
             createPostStatus.value = result
+        }
+    }
+
+    companion object {
+        fun create(context: Context): CreatePostViewModel {
+            return CreatePostViewModel(context)
         }
     }
 }

@@ -58,6 +58,13 @@
                     android:src="@drawable/ic_edit"
                     app:tint="#FFFFFF" />
 
+                <ProgressBar
+                    android:id="@+id/progress_bar"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:visibility="gone"/>
+
             </FrameLayout>
 
             <androidx.cardview.widget.CardView
@@ -235,7 +242,7 @@
                 android:layout_marginStart="-10dp"
                 android:layout_marginEnd="-10dp"
                 app:layout_constraintTop_toBottomOf="@id/info_card"
-                tools:layout_editor_absoluteX="16dp" 
+                tools:layout_editor_absoluteX="16dp"
                 android:paddingBottom="60dp"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>

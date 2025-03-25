@@ -10,16 +10,14 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.levy.danaloca.R
 import com.levy.danaloca.databinding.FragmentFriendsBinding
 import com.levy.danaloca.databinding.ItemFriendBinding
 import com.levy.danaloca.model.FriendRequest
 import com.levy.danaloca.model.User
-import com.levy.danaloca.utils.Resource
 import com.levy.danaloca.utils.Status
-import com.levy.danaloca.utils.AssetUtils
-import com.levy.danaloca.utils.ImageUtils
 import com.levy.danaloca.viewmodel.FriendsViewModel
 
 class FriendsFragment : Fragment() {
@@ -35,11 +33,9 @@ class FriendsFragment : Fragment() {
         super.onCreate(savedInstanceState)
         viewModel = FriendsViewModel()
         
-        // Get current user ID from Firebase Auth
         FirebaseAuth.getInstance().currentUser?.let { 
             currentUserId = it.uid
         } ?: run {
-            // If not logged in, show error and return to previous screen
             Toast.makeText(requireContext(), "Please login first", Toast.LENGTH_SHORT).show()
             requireActivity().onBackPressed()
         }
@@ -59,7 +55,6 @@ class FriendsFragment : Fragment() {
         setupRecyclerView()
         observeViewModel()
         
-        // Only load data if we have a valid user ID
         if (currentUserId.isNotEmpty()) {
             viewModel.loadUsers(currentUserId)
             viewModel.loadFriendRequests(currentUserId)
@@ -85,7 +80,6 @@ class FriendsFragment : Fragment() {
                 showFriendOptionsMenu(userId, view)
             },
             onItemClick = { userId ->
-                // Navigate to UserProfileFragment
                 val userProfileFragment = UserProfileFragment.newInstance(userId)
                 parentFragmentManager.beginTransaction()
                     .setCustomAnimations(
@@ -107,7 +101,7 @@ class FriendsFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        viewModel.users.observe(viewLifecycleOwner, Observer { result ->
+        viewModel.users.observe(viewLifecycleOwner) { result ->
             when (result.status) {
                 Status.LOADING -> showLoading()
                 Status.SUCCESS -> {
@@ -116,22 +110,22 @@ class FriendsFragment : Fragment() {
                 }
                 Status.ERROR -> showError(result.message ?: "Unknown error")
             }
-        })
+        }
 
-        viewModel.friendRequests.observe(viewLifecycleOwner, Observer { result ->
+        viewModel.friendRequests.observe(viewLifecycleOwner) { result ->
             if (result.status == Status.SUCCESS) {
                 result.data?.let { adapter.submitFriendRequests(it) }
             }
-        })
+        }
 
-        viewModel.operationState.observe(viewLifecycleOwner, Observer { result ->
+        viewModel.operationState.observe(viewLifecycleOwner) { result ->
             result?.let {
                 if (it.status == Status.ERROR) {
                     showError(it.message ?: "Unknown error")
                 }
                 viewModel.resetOperationState()
             }
-        })
+        }
     }
 
     private fun showFriendOptionsMenu(userId: String, anchorView: View) {
@@ -225,36 +219,27 @@ private class FriendsAdapter(
 
         fun bind(user: User, requests: List<FriendRequest>) {
             binding.apply {
-                // Set username and profile image
-                tvUsername.text = user.username ?: user.fullName
+                tvUsername.text = user.fullName
                 
-                // Handle avatar
-                if (user.avatar.isNotEmpty()) {
-                    ImageUtils.base64ToBitmap(user.avatar)?.let { bitmap ->
-                        ivProfile.setImageBitmap(bitmap)
-                    }
+                // Handle avatar using Glide
+                if (user.avatarUrl.isNotBlank()) {
+                    Glide.with(root.context)
+                        .load(user.avatarUrl)
+                        .placeholder(R.drawable.default_avatar)
+                        .error(R.drawable.default_avatar)
+                        .circleCrop()
+                        .into(ivProfile)
                 } else {
-                    // Load default avatar if user doesn't have one
-                    val defaultAvatarBase64 = AssetUtils.getDefaultAvatarBase64(root.context)
-                    if (defaultAvatarBase64.isNotEmpty()) {
-                        ImageUtils.base64ToBitmap(defaultAvatarBase64)?.let { bitmap ->
-                            ivProfile.setImageBitmap(bitmap)
-                        }
-                    } else {
-                        ivProfile.setImageResource(R.drawable.default_avatar)
-                    }
+                    ivProfile.setImageResource(R.drawable.default_avatar)
                 }
 
-                // Set location if available
                 tvLocation.text = user.location
                 tvLocation.visibility = if (user.location.isNotEmpty()) View.VISIBLE else View.GONE
 
-                // Set click listener on the root view
                 root.setOnClickListener {
                     onItemClick(user.id)
                 }
 
-                // Setup friend actions
                 friendActions.setUserIds(currentUserId, user.id)
                 friendActions.setAddFriendListener { onAddFriend(it) }
                 friendActions.setCancelRequestListener { onCancelRequest(it) }

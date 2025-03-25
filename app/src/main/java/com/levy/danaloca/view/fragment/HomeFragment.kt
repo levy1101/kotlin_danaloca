@@ -62,7 +62,7 @@ class HomeFragment : PostFragment(), ActionBarFragment.ActionBarListener {
 
     // ActionBarFragment.ActionBarListener implementation
     override fun onSearchClicked() {
-
+        // Implement search functionality
     }
 
     override fun onAddClicked() {
@@ -72,6 +72,4 @@ class HomeFragment : PostFragment(), ActionBarFragment.ActionBarListener {
     override fun onBookmarkClicked(post: Post) {
         // Bookmark functionality not implemented yet
     }
-
-    // Not needed as it's inherited from PostFragment
 }

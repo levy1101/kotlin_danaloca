@@ -15,7 +15,10 @@ import com.levy.danaloca.view.activity.LocationPreviewDialog
 import com.levy.danaloca.viewmodel.HomeViewModel
 import com.levy.danaloca.viewmodel.UserViewModel
 import com.levy.danaloca.utils.Resource
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalCoroutinesApi::class)
 abstract class PostFragment : Fragment(), PostAdapter.PostListener {
 
     protected val userViewModel: UserViewModel by activityViewModels()
@@ -73,7 +76,7 @@ abstract class PostFragment : Fragment(), PostAdapter.PostListener {
 
     // PostAdapter.PostListener implementations
     override fun onLikeClicked(post: Post) {
-        lifecycleScope.launchWhenStarted {
+        lifecycleScope.launch {
             userViewModel.getCurrentUser()?.uid?.let { userId ->
                 homeViewModel.toggleLike(post.id, userId)
             }

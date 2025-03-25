@@ -1,7 +1,6 @@
 package com.levy.danaloca.view.activity
 
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -19,7 +18,6 @@ import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.levy.danaloca.R
 import com.levy.danaloca.model.User
-import com.levy.danaloca.utils.ImageUtils
 import com.levy.danaloca.viewmodel.UserViewModel
 import java.util.*
 
@@ -27,7 +25,7 @@ class RegisterActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var viewModel: UserViewModel
-    private lateinit var defaultAvatarBase64: String
+    private val defaultAvatarUrl = "https://res.cloudinary.com/dbftf4xyv/image/upload/v1742882579/avatar/default_avatar.jpg"
     private lateinit var emailLayout: TextInputLayout
     private lateinit var phoneLayout: TextInputLayout
     private lateinit var fullNameLayout: TextInputLayout
@@ -51,26 +49,11 @@ class RegisterActivity : AppCompatActivity() {
         setContentView(R.layout.activity_register)
 
         auth = FirebaseAuth.getInstance()
-        viewModel = ViewModelProvider(this)[UserViewModel::class.java]
+        viewModel = ViewModelProvider(this).get(UserViewModel::class.java)
         
-        // Load and convert default avatar
-        defaultAvatarBase64 = loadDefaultAvatar()
-
         initializeViews()
         setupObservers()
         setupListeners()
-    }
-
-    private fun loadDefaultAvatar(): String {
-        try {
-            // Read default avatar from assets
-            val inputStream = assets.open("default_avatar.PNG")
-            val bitmap = BitmapFactory.decodeStream(inputStream)
-            return ImageUtils.bitmapToBase64(bitmap)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return "" // Return empty string if failed to load avatar
-        }
     }
 
     private fun initializeViews() {
@@ -250,7 +233,7 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun registerUser(email: String, password: String, phone: String, fullName: String, 
-                           gender: String, location: String, birthdate: String, age: String) {
+                            gender: String, location: String, birthdate: String, age: String) {
         progressBar.visibility = View.VISIBLE
         registerButton.isEnabled = false
 
@@ -267,7 +250,7 @@ class RegisterActivity : AppCompatActivity() {
                         location = location,
                         birthdate = birthdate,
                         age = age,
-                        avatar = defaultAvatarBase64
+                        avatarUrl = defaultAvatarUrl
                     )
                     viewModel.saveUser(user)
                     Toast.makeText(this, "Registration successful!", Toast.LENGTH_SHORT).show()

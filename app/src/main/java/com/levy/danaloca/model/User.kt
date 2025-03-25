@@ -11,7 +11,7 @@ data class User(
     val birthdate: String = "",
     val age: String = "",
     val friends: Map<String, Boolean> = emptyMap(),
-    val avatar: String = "" // Base64 encoded image string
+    val avatarUrl: String = "" // Cloudinary image URL
 ) {
     // Empty constructor required for Firebase
     constructor() : this(
@@ -25,7 +25,7 @@ data class User(
         birthdate = "",
         age = "",
         friends = emptyMap(),
-        avatar = ""
+        avatarUrl = ""
     )
 
     fun isFriendWith(userId: String): Boolean {

@@ -1,27 +1,26 @@
 package com.levy.danaloca.view.fragment
 
-import android.app.Activity
-import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.ImageButton
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.TextView
-import com.levy.danaloca.utils.ImageUtils
+import android.widget.Toast
+import android.widget.ProgressBar
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import de.hdodenhof.circleimageview.CircleImageView
 import com.levy.danaloca.R
 import com.levy.danaloca.model.User
 import com.levy.danaloca.utils.Resource
+import kotlinx.coroutines.launch
 
 class MyProfileFragment : PostFragment() {
 
-    companion object {
-        private const val PICK_IMAGE_REQUEST = 1
-    }
-
-    // Profile info views
     private lateinit var fullNameText: TextView
     private lateinit var emailText: TextView
     private lateinit var phoneText: TextView
@@ -31,6 +30,62 @@ class MyProfileFragment : PostFragment() {
     private lateinit var locationText: TextView
     private lateinit var profileImageView: CircleImageView
     private lateinit var changeProfileButton: ImageButton
+    private lateinit var progressBar: ProgressBar
+
+    private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            try {
+                requireContext().contentResolver.openInputStream(it)?.use { stream ->
+                    android.graphics.BitmapFactory.decodeStream(stream)?.let { bitmap ->
+                        // Show loading indicator
+                        progressBar.visibility = View.VISIBLE
+                        changeProfileButton.isEnabled = false
+
+                        // Start upload process
+                        lifecycleScope.launch {
+                            try {
+                                userViewModel.getCurrentUser()?.let { user ->
+                                    val result = userViewModel.updateUserAvatar(user.uid, bitmap)
+                                    when (result) {
+                                        is Resource.Success -> {
+                                            // Update image view with new image
+                                            Glide.with(requireContext())
+                                                .load(result.data)
+                                                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                                                .skipMemoryCache(true)
+                                                .placeholder(R.drawable.default_avatar)
+                                                .error(R.drawable.default_avatar)
+                                                .circleCrop()
+                                                .into(profileImageView)
+                                            
+                                            Toast.makeText(requireContext(), "Profile image updated successfully", Toast.LENGTH_SHORT).show()
+                                        }
+                                        is Resource.Error -> {
+                                            Toast.makeText(requireContext(), result.message ?: "Failed to update profile image", Toast.LENGTH_LONG).show()
+                                            // Reload current user data to restore previous image
+                                            loadUserData()
+                                        }
+                                        else -> {
+                                            // Handle loading state if needed
+                                        }
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Toast.makeText(requireContext(), "Error updating profile image: ${e.message}", Toast.LENGTH_LONG).show()
+                                loadUserData() // Restore previous state
+                            } finally {
+                                progressBar.visibility = View.GONE
+                                changeProfileButton.isEnabled = true
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(requireContext(), "Failed to load image", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -56,9 +111,10 @@ class MyProfileFragment : PostFragment() {
         locationText = view.findViewById(R.id.tv_location)
         profileImageView = view.findViewById(R.id.profile_image)
         changeProfileButton = view.findViewById(R.id.btn_change_profile)
+        progressBar = view.findViewById(R.id.progress_bar)
         
         changeProfileButton.setOnClickListener {
-            openImagePicker()
+            pickImage.launch("image/*")
         }
     }
 
@@ -96,47 +152,18 @@ class MyProfileFragment : PostFragment() {
         birthdateText.text = user.birthdate.ifBlank { "Not set" }
         locationText.text = user.location.ifBlank { "Not set" }
 
-        // Handle profile image
-        user.avatar.let { base64Image ->
-            if (base64Image.isNotBlank()) {
-                ImageUtils.base64ToBitmap(base64Image)?.let { bitmap ->
-                    profileImageView.setImageBitmap(bitmap)
-                }
-            }
-        }
-    }
-
-    private fun openImagePicker() {
-        val intent = Intent().apply {
-            type = "image/*"
-            action = Intent.ACTION_GET_CONTENT
-        }
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null) {
-            try {
-                val imageUri = data.data
-                imageUri?.let { uri ->
-                    val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
-                    
-                    // Convert to base64
-                    val base64Image = ImageUtils.bitmapToBase64(bitmap)
-                    
-                    // Update profile image immediately
-                    profileImageView.setImageBitmap(bitmap)
-                    
-                    // Update user avatar in Firebase
-                    userViewModel.getCurrentUser()?.let { user ->
-                        userViewModel.updateUserAvatar(user.uid, base64Image)
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+        // Load profile image using Glide
+        if (user.avatarUrl.isNotBlank()) {
+            Glide.with(requireContext())
+                .load(user.avatarUrl)
+                .diskCacheStrategy(DiskCacheStrategy.NONE) // Skip disk cache
+                .skipMemoryCache(true) // Skip memory cache
+                .placeholder(R.drawable.default_avatar)
+                .error(R.drawable.default_avatar)
+                .circleCrop()
+                .into(profileImageView)
+        } else {
+            profileImageView.setImageResource(R.drawable.default_avatar)
         }
     }
 }

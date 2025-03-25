@@ -1,27 +1,29 @@
 package com.levy.danaloca.viewmodel
 
+import android.app.Application
+import android.graphics.Bitmap
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
-import com.levy.danaloca.model.FriendRequest
-import com.levy.danaloca.model.FriendRequestStatus
 import com.levy.danaloca.model.User
 import com.levy.danaloca.repository.UserRepository
 import com.levy.danaloca.utils.Resource
+import kotlinx.coroutines.launch
 import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 @OptIn(ExperimentalCoroutinesApi::class)
-
-class UserViewModel : ViewModel() {
-    private val repository = UserRepository()
+class UserViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = UserRepository(application)
     
+    @ExperimentalCoroutinesApi
     suspend fun GetUserAvatar(userId: String): String {
         return suspendCancellableCoroutine { continuation ->
             repository.getUser(userId).addListenerForSingleValueEvent(object : ValueEventListener {
@@ -37,7 +39,7 @@ class UserViewModel : ViewModel() {
                         return
                     }
 
-                    continuation.resume(user.avatar) { }
+                    continuation.resume(user.avatarUrl) { }
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -47,6 +49,7 @@ class UserViewModel : ViewModel() {
         }
     }
 
+    @ExperimentalCoroutinesApi
     suspend fun GetUserFullName(userId: String): String {
         return suspendCancellableCoroutine { continuation ->
             Log.d("UserViewModel", "Getting user name for ID: $userId")
@@ -143,76 +146,45 @@ class UserViewModel : ViewModel() {
         })
     }
 
-    fun getUserByEmail(email: String) {
-        _isLoading.value = true
-        repository.getUserByEmail(email).addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                _isLoading.value = false
-                snapshot.children.firstOrNull()?.let { userSnapshot ->
-                    userSnapshot.getValue(User::class.java)?.let {
-                        _user.value = it
-                        _userId.value = userSnapshot.key
+    fun getCurrentUser() = FirebaseAuth.getInstance().currentUser
+
+    suspend fun updateUserAvatar(userId: String, bitmap: Bitmap): Resource<String> {
+        return try {
+            _isLoading.value = true
+            val result = repository.updateUserAvatar(userId, bitmap)
+            when (result) {
+                is Resource.Success -> {
+                    Log.d("UserViewModel", "Avatar uploaded successfully: ${result.data}")
+                    result.data?.let { url ->
+                        // Get current user data
+                        val currentUser = _user.value
+                        // Update user with new avatar URL
+                        currentUser?.let { user ->
+                            val updatedUser = user.copy(avatarUrl = url)
+                            // Save updated user to Firebase
+                            repository.saveUser(updatedUser, userId)
+                                .addOnSuccessListener {
+                                    _user.value = updatedUser
+                                    Log.d("UserViewModel", "User updated with new avatar")
+                                }
+                                .addOnFailureListener { e ->
+                                    Log.e("UserViewModel", "Failed to update user with new avatar", e)
+                                }
+                        }
                     }
+                    result
                 }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                _isLoading.value = false
-                _error.value = error.message
-            }
-        })
-    }
-
-    fun getUserByPhone(phone: String) {
-        _isLoading.value = true
-        repository.getUserByPhone(phone).addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                _isLoading.value = false
-                snapshot.children.firstOrNull()?.let { userSnapshot ->
-                    userSnapshot.getValue(User::class.java)?.let {
-                        _user.value = it
-                        _userId.value = userSnapshot.key
-                    }
+                is Resource.Error -> {
+                    Log.e("UserViewModel", "Failed to upload avatar: ${result.message}")
+                    result
                 }
+                else -> result
             }
-
-            override fun onCancelled(error: DatabaseError) {
-                _isLoading.value = false
-                _error.value = error.message
-            }
-        })
+        } catch (e: Exception) {
+            Log.e("UserViewModel", "Error updating avatar", e)
+            Resource.error("Failed to update avatar: ${e.message}")
+        } finally {
+            _isLoading.value = false
+        }
     }
-
-    fun updateUser(userId: String, updates: Map<String, Any>) {
-        _isLoading.value = true
-        repository.updateUser(userId, updates)
-            .addOnSuccessListener {
-                _isLoading.value = false
-            }
-            .addOnFailureListener { e ->
-                _isLoading.value = false
-                _error.value = e.message
-            }
-    }
-
-    fun deleteUser(userId: String) {
-        _isLoading.value = true
-        repository.deleteUser(userId)
-            .addOnSuccessListener {
-                _isLoading.value = false
-                _user.value = null
-                _userId.value = null
-            }
-            .addOnFailureListener { e ->
-                _isLoading.value = false
-                _error.value = e.message
-            }
-    }
-fun getCurrentUser() = FirebaseAuth.getInstance().currentUser
-
-fun updateUserAvatar(userId: String, base64Image: String) {
-    updateUser(userId, mapOf("avatar" to base64Image))
-}
-
-
 }

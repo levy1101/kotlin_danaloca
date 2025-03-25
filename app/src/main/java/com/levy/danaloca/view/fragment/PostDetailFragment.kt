@@ -10,9 +10,9 @@ import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
 import com.levy.danaloca.R
 import com.levy.danaloca.model.Post
-import com.levy.danaloca.utils.ImageUtils
 import com.levy.danaloca.utils.Resource
 import com.levy.danaloca.view.activity.LocationPreviewDialog
 import com.levy.danaloca.viewmodel.UserViewModel
@@ -20,7 +20,9 @@ import com.levy.danaloca.viewmodel.HomeViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class PostDetailFragment : Fragment() {
     private val userViewModel: UserViewModel by activityViewModels()
     private val homeViewModel: HomeViewModel by activityViewModels()
@@ -64,7 +66,6 @@ class PostDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         initViews(view)
         setupListeners()
         loadPost()
@@ -139,42 +140,40 @@ class PostDetailFragment : Fragment() {
     }
 
     private fun displayPost(post: Post) {
-        // Set user name in toolbar and post
         lifecycleScope.launch {
             try {
                 val fullName = userViewModel.GetUserFullName(post.userId)
                 toolbarUserName.text = fullName
                 userName.text = fullName
+
+                // Load and display user avatar
+                val avatarUrl = userViewModel.GetUserAvatar(post.userId)
+                if (avatarUrl.isNotBlank()) {
+                    Glide.with(requireContext())
+                        .load(avatarUrl)
+                        .placeholder(R.drawable.default_avatar)
+                        .error(R.drawable.default_avatar)
+                        .circleCrop()
+                        .into(userAvatar)
+                } else {
+                    userAvatar.setImageResource(R.drawable.default_avatar)
+                }
             } catch (e: Exception) {
                 toolbarUserName.text = "Unknown User"
                 userName.text = "Unknown User"
-            }
-
-            // Load and display user avatar
-            try {
-                val avatarBase64 = userViewModel.GetUserAvatar(post.userId)
-                if (avatarBase64.isNotBlank()) {
-                    ImageUtils.base64ToBitmap(avatarBase64)?.let { bitmap ->
-                        userAvatar.setImageBitmap(bitmap)
-                    }
-                }
-            } catch (e: Exception) {
-                // Keep default avatar on error
+                userAvatar.setImageResource(R.drawable.default_avatar)
             }
         }
 
-        // Set timestamp with complete date and time
         timestamp.text = dateFormat.format(Date(post.timestamp))
-
-        // Set content
         content.text = post.content
 
         // Handle post image
-        if (post.imageBase64.isNotBlank()) {
-            ImageUtils.base64ToBitmap(post.imageBase64)?.let { bitmap ->
-                postImage.setImageBitmap(bitmap)
-                postImage.visibility = View.VISIBLE
-            }
+        if (post.imageUrl.isNotBlank()) {
+            Glide.with(requireContext())
+                .load(post.imageUrl)
+                .into(postImage)
+            postImage.visibility = View.VISIBLE
         } else {
             postImage.visibility = View.GONE
         }
@@ -183,19 +182,14 @@ class PostDetailFragment : Fragment() {
         if (post.latitude != null && post.longitude != null) {
             locationContainer.visibility = View.VISIBLE
             locationText.text = String.format("%.6f, %.6f", post.latitude, post.longitude)
-            locationContainer.setOnClickListener {
-                showLocationPreview(post.latitude, post.longitude)
-            }
         } else {
             locationContainer.visibility = View.GONE
             locationContainer.setOnClickListener(null)
         }
 
-        // Set counts
         likeCount.text = "${post.likes}"
         commentCount.text = "${post.comments}"
 
-        // Update like status
         updateLikeStatus(post)
     }
 

@@ -28,6 +28,7 @@ allprojects {
                 password = "sk.eyJ1IjoibGV0aGl2eXFuYTEyMzEyMyIsImEiOiJjbThiZWdzeHIxYWhrMmpzN2Z3MGc1cXFkIn0.sujNgDyufkXXFT41bjrUvQ" // This is different from your public access token
             }
         }
+        maven { url "https://jitpack.io" }
     }
 }
 

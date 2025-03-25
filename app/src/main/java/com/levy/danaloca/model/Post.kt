@@ -4,7 +4,7 @@ data class Post(
     val id: String = "",
     val userId: String = "",
     val content: String = "",
-    val imageBase64: String = "", // Base64 encoded image
+    val imageUrl: String = "", // Cloudinary image URL
     val timestamp: Long = System.currentTimeMillis(),
     val likes: Int = 0,
     val comments: Int = 0,

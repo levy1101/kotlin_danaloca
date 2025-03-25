@@ -1,5 +1,6 @@
 package com.levy.danaloca.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -14,11 +15,10 @@ import com.levy.danaloca.repository.UserRepository
 import com.levy.danaloca.utils.Resource
 import com.levy.danaloca.utils.Status
 
-class UserProfileViewModel(
-    private val userRepository: UserRepository = UserRepository(),
-    private val friendsRepository: FriendsRepository = FriendsRepository(),
-    private val postRepository: PostRepository = PostRepository()
-) : ViewModel() {
+class UserProfileViewModel(context: Context) : ViewModel() {
+    private val userRepository = UserRepository(context)
+    private val friendsRepository = FriendsRepository()
+    private val postRepository = PostRepository(context)
 
     private val _user = MutableLiveData<Resource<User>>(Resource.loading())
     val user: LiveData<Resource<User>> = _user
@@ -36,14 +36,12 @@ class UserProfileViewModel(
         userRepository.getUserProfile(userId) { result ->
             _user.postValue(result)
         }
-        // Load friend requests for both current user and profile user
         FirebaseAuth.getInstance().currentUser?.uid?.let { currentUserId ->
             loadFriendRequests(currentUserId)
             if (currentUserId != userId) {
                 loadFriendRequests(userId)
             }
         }
-        // Load user posts
         loadUserPosts(userId)
     }
 
@@ -89,7 +87,7 @@ class UserProfileViewModel(
             _operationState.postValue(result)
             loadFriendRequests(currentUserId)
             loadFriendRequests(userId)
-            loadUserProfile(userId)  // Reload user profile data
+            loadUserProfile(userId)
         }
     }
 
@@ -116,7 +114,6 @@ class UserProfileViewModel(
     fun acceptFriendRequest(request: FriendRequest) {
         friendsRepository.acceptFriendRequest(request) { result ->
             _operationState.postValue(result)
-            // Reload data for both users
             loadUserProfile(request.receiverId)
             loadUserProfile(request.senderId)
             loadFriendRequests(request.receiverId)
@@ -148,5 +145,11 @@ class UserProfileViewModel(
 
     fun getFriendRequestId(senderId: String, receiverId: String): String {
         return "${senderId}_${receiverId}"
+    }
+
+    companion object {
+        fun create(context: Context): UserProfileViewModel {
+            return UserProfileViewModel(context)
+        }
     }
 }

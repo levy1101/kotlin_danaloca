@@ -9,16 +9,18 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.levy.danaloca.R
 import com.levy.danaloca.model.Post
 import com.levy.danaloca.viewmodel.UserViewModel
 import com.levy.danaloca.viewmodel.HomeViewModel
-import com.levy.danaloca.utils.ImageUtils
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class PostAdapter(
     private val lifecycleScope: LifecycleCoroutineScope,
     private val userViewModel: UserViewModel,
@@ -29,32 +31,21 @@ class PostAdapter(
     private val dateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault())
     private val timeFormat = SimpleDateFormat("EEEE, HH:mm", Locale.getDefault())
     private val monthDayFormat = SimpleDateFormat("MMMM d", Locale.getDefault())
-    private val userNameCache = mutableMapOf<String, String>()  // Cache for usernames
-    private val userAvatarCache = mutableMapOf<String, String>()  // Cache for user avatars
+    private val userNameCache = mutableMapOf<String, String>()
+    private val userAvatarCache = mutableMapOf<String, String>()
 
     private fun getFormattedTimestamp(timestamp: Long): String {
         val now = System.currentTimeMillis()
         val diff = now - timestamp
         
         return when {
-            // Less than 1 minute
             diff < 60_000 -> "Just now"
-            
-            // Less than 1 hour
             diff < 3600_000 -> "${diff / 60_000} minutes ago"
-            
-            // Less than 24 hours
             diff < 86400_000 -> "${diff / 3600_000} hours ago"
-            
-            // This week (less than 7 days)
             diff < 604800_000 -> timeFormat.format(Date(timestamp))
-            
-            // This year
             Calendar.getInstance().apply { timeInMillis = timestamp }.get(Calendar.YEAR) ==
             Calendar.getInstance().apply { timeInMillis = now }.get(Calendar.YEAR) ->
                 monthDayFormat.format(Date(timestamp))
-            
-            // Last year
             else -> dateFormat.format(Date(timestamp))
         }
     }
@@ -69,7 +60,7 @@ class PostAdapter(
         fun onMoreClicked(post: Post)
         fun onPostLongPressed(post: Post)
         fun onBookmarkClicked(post: Post)
-        fun onPostClicked(post: Post) // New callback for post clicks
+        fun onPostClicked(post: Post)
     }
 
     var listener: PostListener? = null
@@ -77,8 +68,8 @@ class PostAdapter(
     fun updatePosts(newPosts: List<Post>) {
         posts.clear()
         posts.addAll(newPosts)
-        userNameCache.clear() // Clear the cache when updating all posts
-        userAvatarCache.clear() // Clear avatar cache too
+        userNameCache.clear()
+        userAvatarCache.clear()
         notifyDataSetChanged()
     }
 
@@ -111,105 +102,100 @@ class PostAdapter(
         private val bookmarkButton: View = itemView.findViewById(R.id.bookmarkButton)
         
         fun bind(post: Post) {
-            Log.d("PostAdapter", "Binding post: ${post.id}, userId: ${post.userId}")
-
-            // Set click listener for the entire post
             itemView.setOnClickListener {
                 listener?.onPostClicked(post)
             }
 
-            if (post.userId.isBlank()) {
-                userName.text = "Unknown User"
-            } else {
-                // First check cache
+            loadUserDetails(post)
+            setupContent(post)
+            setupPostImage(post)
+            setupLocation(post)
+            setupClickListeners(post)
+            updateLikeStatus(post)
+        }
+
+        private fun loadUserDetails(post: Post) {
+            if (post.userId.isNotBlank()) {
                 val cachedName = userNameCache[post.userId]
                 if (cachedName != null) {
                     userName.text = cachedName
                 } else {
-                    // Keep the current text while loading
                     lifecycleScope.launch {
                         try {
                             val fullName = userViewModel.GetUserFullName(post.userId)
-                            Log.d("PostAdapter", "Received fullName: $fullName for userId: ${post.userId}")
-
-                            // Cache the username
                             userNameCache[post.userId] = fullName
-
-                            // Only update if the ViewHolder is still bound to the same post
-                            val position = adapterPosition
-                            if (position != RecyclerView.NO_POSITION &&
-                                position < posts.size &&
-                                posts[position].id == post.id) {
+                            if (adapterPosition != RecyclerView.NO_POSITION &&
+                                posts[adapterPosition].id == post.id) {
                                 userName.text = fullName
                             }
                         } catch (e: Exception) {
                             if (e is CancellationException) throw e
-                            Log.e("PostAdapter", "Error loading user name for userId: ${post.userId}", e)
+                            Log.e("PostAdapter", "Error loading user name", e)
                         }
                     }
                 }
-            }
 
-            // Load user avatar
-            if (post.userId.isNotBlank()) {
-                // First check avatar cache
                 val cachedAvatar = userAvatarCache[post.userId]
                 if (cachedAvatar != null) {
-                    if (cachedAvatar.isNotBlank()) {
-                        ImageUtils.base64ToBitmap(cachedAvatar)?.let { bitmap ->
-                            userAvatar.setImageBitmap(bitmap)
-                        }
-                    }
+                    loadUserAvatar(cachedAvatar)
                 } else {
                     lifecycleScope.launch {
                         try {
-                            val avatarBase64 = userViewModel.GetUserAvatar(post.userId)
-                            // Cache the avatar
-                            userAvatarCache[post.userId] = avatarBase64
-
-                            // Only update if the ViewHolder is still bound to the same post
-                            val position = adapterPosition
-                            if (position != RecyclerView.NO_POSITION &&
-                                position < posts.size &&
-                                posts[position].id == post.id &&
-                                avatarBase64.isNotBlank()
-                            ) {
-                                ImageUtils.base64ToBitmap(avatarBase64)?.let { bitmap ->
-                                    userAvatar.setImageBitmap(bitmap)
-                                }
+                            val avatarUrl = userViewModel.GetUserAvatar(post.userId)
+                            userAvatarCache[post.userId] = avatarUrl
+                            if (adapterPosition != RecyclerView.NO_POSITION &&
+                                posts[adapterPosition].id == post.id) {
+                                loadUserAvatar(avatarUrl)
                             }
                         } catch (e: Exception) {
                             if (e is CancellationException) throw e
-                            Log.e("PostAdapter", "Error loading user avatar for userId: ${post.userId}", e)
+                            Log.e("PostAdapter", "Error loading avatar", e)
                         }
                     }
                 }
             }
+        }
 
-            // Set other post details
+        private fun setupContent(post: Post) {
             timestamp.text = getFormattedTimestamp(post.timestamp)
             content.text = post.content
             likeCount.text = "${post.likes}"
             commentCount.text = "${post.comments}"
+        }
 
-            // Handle post image
-            if (post.imageBase64.isNotBlank()) {
-                ImageUtils.base64ToBitmap(post.imageBase64)?.let { bitmap ->
-                    postImage.setImageBitmap(bitmap)
-                    postImage.visibility = View.VISIBLE
-                }
+        private fun setupPostImage(post: Post) {
+            if (post.imageUrl.isNotBlank()) {
+                Glide.with(itemView.context)
+                    .load(post.imageUrl)
+                    .into(postImage)
+                postImage.visibility = View.VISIBLE
             } else {
                 postImage.visibility = View.GONE
             }
+        }
 
-            // Handle location icon
+        private fun setupLocation(post: Post) {
             locationIcon.visibility = if (post.latitude != null && post.longitude != null) {
                 View.VISIBLE
             } else {
                 View.GONE
             }
+        }
 
-            // Set up click listeners
+        private fun loadUserAvatar(avatarUrl: String) {
+            if (avatarUrl.isNotBlank()) {
+                Glide.with(itemView.context)
+                    .load(avatarUrl)
+                    .placeholder(R.drawable.default_avatar)
+                    .error(R.drawable.default_avatar)
+                    .circleCrop()
+                    .into(userAvatar)
+            } else {
+                userAvatar.setImageResource(R.drawable.default_avatar)
+            }
+        }
+
+        private fun setupClickListeners(post: Post) {
             likeButton.setOnClickListener {
                 listener?.onLikeClicked(post)
             }
@@ -226,7 +212,6 @@ class PostAdapter(
                 listener?.onMoreClicked(post)
             }
 
-            // Set up long click listener for posts with location
             if (post.latitude != null && post.longitude != null) {
                 itemView.setOnLongClickListener {
                     listener?.onPostLongPressed(post)
@@ -235,8 +220,9 @@ class PostAdapter(
             } else {
                 itemView.setOnLongClickListener(null)
             }
+        }
 
-            // Update like icon based on current user's like status
+        private fun updateLikeStatus(post: Post) {
             lifecycleScope.launch {
                 try {
                     userViewModel.getCurrentUser()?.uid?.let { currentUserId ->

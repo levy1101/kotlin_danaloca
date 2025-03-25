@@ -9,12 +9,14 @@ import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.levy.danaloca.R
 import com.levy.danaloca.model.User
 import com.levy.danaloca.utils.Resource
 import com.levy.danaloca.view.custom.FriendActionsView
 import com.levy.danaloca.viewmodel.FriendsViewModel
+import de.hdodenhof.circleimageview.CircleImageView
 
 class UserProfileFragment : PostFragment() {
 
@@ -29,6 +31,7 @@ class UserProfileFragment : PostFragment() {
     private lateinit var backButton: ImageButton
     private lateinit var messageButton: ImageButton
     private lateinit var friendActions: FriendActionsView
+    private lateinit var profileImageView: CircleImageView
 
     private var currentUserId: String? = null
     private var userId: String? = null
@@ -75,7 +78,6 @@ class UserProfileFragment : PostFragment() {
     }
 
     private fun initProfileViews(view: View) {
-        // Initialize profile info views
         profileTitle = view.findViewById(R.id.profile_title)
         fullNameText = view.findViewById(R.id.tv_user_full_name)
         genderText = view.findViewById(R.id.tv_user_gender)
@@ -84,6 +86,7 @@ class UserProfileFragment : PostFragment() {
         backButton = view.findViewById(R.id.btn_back)
         messageButton = view.findViewById(R.id.btn_message)
         friendActions = view.findViewById(R.id.friend_actions)
+        profileImageView = view.findViewById(R.id.user_profile_image)
 
         backButton.setOnClickListener {
             parentFragmentManager.popBackStack()
@@ -163,12 +166,7 @@ class UserProfileFragment : PostFragment() {
                                 friendActions.updateState(user, resource.data)
                             }
                         }
-                        is Resource.Loading -> {
-                            // Handle loading state if needed
-                        }
-                        is Resource.Error -> {
-                            // Handle error state if needed
-                        }
+                        else -> {} // Handle other states if needed
                     }
                 }
             }
@@ -178,23 +176,16 @@ class UserProfileFragment : PostFragment() {
                 result?.let {
                     when (it) {
                         is Resource.Success -> {
-                            // Refresh friend requests after successful operation
                             currentUserId?.let { currentId ->
                                 friendsViewModel.loadFriendRequests(currentId)
                             }
                         }
-                        is Resource.Error -> {
-                            // Handle error if needed
-                        }
-                        is Resource.Loading -> {
-                            // Handle loading state if needed
-                        }
+                        else -> {} // Handle other states if needed
                     }
                     friendsViewModel.resetOperationState()
                 }
             }
             
-            // Posts will be loaded by PostFragment's observePosts
             observePosts { posts ->
                 val userPosts = posts.filter { it.userId == id }
                 postAdapter.updatePosts(userPosts)
@@ -208,7 +199,17 @@ class UserProfileFragment : PostFragment() {
         genderText.text = user.gender.ifBlank { "Not set" }
         ageText.text = user.age.ifBlank { "Not set" }
         locationText.text = user.location.ifBlank { "Not set" }
-    }
 
-    // Location preview functionality is now handled by PostFragment
+        // Load profile image using Glide
+        if (user.avatarUrl.isNotBlank()) {
+            Glide.with(requireContext())
+                .load(user.avatarUrl)
+                .placeholder(R.drawable.default_avatar)
+                .error(R.drawable.default_avatar)
+                .circleCrop()
+                .into(profileImageView)
+        } else {
+            profileImageView.setImageResource(R.drawable.default_avatar)
+        }
+    }
 }
