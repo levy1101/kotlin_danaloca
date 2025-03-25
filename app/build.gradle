@@ -85,7 +85,11 @@ dependencies {
     // Firebase Cloud Messaging
     implementation 'com.google.firebase:firebase-messaging-ktx:23.0.0'
 
+    // Cloudinary
     implementation 'com.cloudinary:cloudinary-android:2.0.0'
+
+
+    implementation 'com.github.yalantis:ucrop:2.2.8'
 }
 
 apply plugin: 'com.google.gms.google-services'

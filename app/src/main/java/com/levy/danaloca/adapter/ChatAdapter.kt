@@ -7,6 +7,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.levy.danaloca.databinding.ItemChatMessageBinding
 import com.levy.danaloca.model.ChatMessage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class ChatAdapter : RecyclerView.Adapter<ChatAdapter.ChatViewHolder>() {
     private val messages = mutableListOf<ChatMessage>()
@@ -33,10 +36,21 @@ class ChatAdapter : RecyclerView.Adapter<ChatAdapter.ChatViewHolder>() {
 
     override fun getItemCount() = messages.size
 
+    private lateinit var userViewModel: com.levy.danaloca.viewmodel.UserViewModel
+
+    fun setUserViewModel(viewModel: com.levy.danaloca.viewmodel.UserViewModel) {
+        userViewModel = viewModel
+    }
+
     inner class ChatViewHolder(private val binding: ItemChatMessageBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(message: ChatMessage) {
+            // Load sender avatar for received messages
+            if (message.senderId != currentUserId) {
+                loadSenderAvatar(message.senderId)
+            }
+
             if (message.senderId == currentUserId) {
                 // Show sent message
                 binding.sentMessageLayout.visibility = View.VISIBLE
@@ -51,14 +65,22 @@ class ChatAdapter : RecyclerView.Adapter<ChatAdapter.ChatViewHolder>() {
                 binding.receivedMessageLayout.visibility = View.VISIBLE
                 binding.receivedMessageText.text = message.message
                 
-                // Set timestamp and avatar for received message
+                // Set timestamp for received message
                 binding.receivedTime.text = formatTime(message.timestamp)
-                // You can load sender's avatar here using Glide or similar
-                // Example:
-                // Glide.with(binding.senderAvatar)
-                //     .load(message.senderPhotoUrl)
-                //     .placeholder(R.drawable.default_avatar)
-                //     .into(binding.senderAvatar)
+            }
+        }
+
+        private fun loadSenderAvatar(senderId: String) {
+            kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                try {
+                    val avatarUrl = userViewModel.GetUserAvatar(senderId)
+                    com.levy.danaloca.utils.GlideUtils.loadProfileImage(
+                        binding.senderAvatar,
+                        avatarUrl
+                    )
+                } catch (e: Exception) {
+                    android.util.Log.e("ChatAdapter", "Error loading avatar: ${e.message}")
+                }
             }
         }
 

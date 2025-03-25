@@ -19,14 +19,16 @@ object ImageUtils {
         folder: String
     ): String = suspendCoroutine { continuation ->
         try {
-            // Convert bitmap to byte array
+            // Convert bitmap to byte array with optimized compression
             val outputStream = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
             val byteArray = outputStream.toByteArray()
 
             // Upload to Cloudinary
             MediaManager.get().upload(byteArray)
                 .option("folder", folder)
+                .option("quality", 85)
+                .option("format", "jpg")
                 .callback(object : UploadCallback {
                     override fun onStart(requestId: String) {
                         Log.d("ImageUtils", "Upload started with requestId: $requestId")

@@ -9,7 +9,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
+import com.levy.danaloca.utils.GlideUtils
 import com.levy.danaloca.R
 import com.levy.danaloca.model.Post
 import com.levy.danaloca.viewmodel.UserViewModel
@@ -164,13 +164,11 @@ class PostAdapter(
         }
 
         private fun setupPostImage(post: Post) {
-            if (post.imageUrl.isNotBlank()) {
-                Glide.with(itemView.context)
-                    .load(post.imageUrl)
-                    .into(postImage)
-                postImage.visibility = View.VISIBLE
+            postImage.visibility = if (post.imageUrl.isNotBlank()) {
+                GlideUtils.loadPostImage(postImage, post.imageUrl)
+                View.VISIBLE
             } else {
-                postImage.visibility = View.GONE
+                View.GONE
             }
         }
 
@@ -183,16 +181,7 @@ class PostAdapter(
         }
 
         private fun loadUserAvatar(avatarUrl: String) {
-            if (avatarUrl.isNotBlank()) {
-                Glide.with(itemView.context)
-                    .load(avatarUrl)
-                    .placeholder(R.drawable.default_avatar)
-                    .error(R.drawable.default_avatar)
-                    .circleCrop()
-                    .into(userAvatar)
-            } else {
-                userAvatar.setImageResource(R.drawable.default_avatar)
-            }
+            GlideUtils.loadProfileImage(userAvatar, avatarUrl)
         }
 
         private fun setupClickListeners(post: Post) {

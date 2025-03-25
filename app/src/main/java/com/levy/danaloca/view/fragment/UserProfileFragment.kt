@@ -9,7 +9,7 @@ import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
-import com.bumptech.glide.Glide
+import com.levy.danaloca.utils.GlideUtils
 import com.google.firebase.auth.FirebaseAuth
 import com.levy.danaloca.R
 import com.levy.danaloca.model.User
@@ -200,16 +200,7 @@ class UserProfileFragment : PostFragment() {
         ageText.text = user.age.ifBlank { "Not set" }
         locationText.text = user.location.ifBlank { "Not set" }
 
-        // Load profile image using Glide
-        if (user.avatarUrl.isNotBlank()) {
-            Glide.with(requireContext())
-                .load(user.avatarUrl)
-                .placeholder(R.drawable.default_avatar)
-                .error(R.drawable.default_avatar)
-                .circleCrop()
-                .into(profileImageView)
-        } else {
-            profileImageView.setImageResource(R.drawable.default_avatar)
-        }
+        // Load profile image using GlideUtils
+        GlideUtils.loadProfileImage(profileImageView, user.avatarUrl)
     }
 }

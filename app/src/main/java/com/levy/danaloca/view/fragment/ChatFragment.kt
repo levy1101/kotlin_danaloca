@@ -16,16 +16,20 @@ import com.levy.danaloca.viewmodel.ChatViewModel
 class ChatFragment : Fragment() {
     private var _binding: FragmentChatBinding? = null
     private val binding get() = _binding!!
-    private lateinit var viewModel: ChatViewModel
+    private lateinit var chatViewModel: ChatViewModel
+    private lateinit var userViewModel: com.levy.danaloca.viewmodel.UserViewModel
     private lateinit var chatAdapter: ChatAdapter
     private var userId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel = ViewModelProvider(this)[ChatViewModel::class.java]
+        chatViewModel = ViewModelProvider(this)[ChatViewModel::class.java]
+        userViewModel = ViewModelProvider(this)[com.levy.danaloca.viewmodel.UserViewModel::class.java]
         arguments?.let {
             userId = it.getString("userId")
-            userId?.let { id -> viewModel.loadMessages(id) }
+            userId?.let { id ->
+                chatViewModel.loadMessages(id)
+            }
         }
     }
 
@@ -42,6 +46,7 @@ class ChatFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupUI()
         setupObservers()
+        userId?.let { id -> loadUserDetails(id) }
     }
 
     private fun setupUI() {
@@ -52,6 +57,7 @@ class ChatFragment : Fragment() {
 
     private fun setupRecyclerView() {
         chatAdapter = ChatAdapter()
+        chatAdapter.setUserViewModel(userViewModel)
         binding.messagesRecyclerView.apply {
             layoutManager = LinearLayoutManager(context).apply {
                 stackFromEnd = true
@@ -64,7 +70,7 @@ class ChatFragment : Fragment() {
         binding.btnSend.setOnClickListener {
             val message = binding.messageInput.text.toString().trim()
             if (message.isNotEmpty() && userId != null) {
-                viewModel.sendMessage(userId!!, message)
+                chatViewModel.sendMessage(userId!!, message)
                 binding.messageInput.text.clear()
             }
         }
@@ -76,8 +82,21 @@ class ChatFragment : Fragment() {
         }
     }
 
+    private fun loadUserDetails(userId: String) {
+        userViewModel.getUser(userId)
+        userViewModel.user.observe(viewLifecycleOwner) { user ->
+            user?.let {
+                binding.tvChatTitle.text = it.fullName
+                com.levy.danaloca.utils.GlideUtils.loadProfileImage(
+                    binding.profileImage,
+                    it.avatarUrl
+                )
+            }
+        }
+    }
+
     private fun setupObservers() {
-        viewModel.messages?.observe(viewLifecycleOwner) { result ->
+        chatViewModel.messages?.observe(viewLifecycleOwner) { result ->
             when (result.status) {
                 Status.SUCCESS -> {
                     hideLoading()
@@ -96,7 +115,7 @@ class ChatFragment : Fragment() {
             }
         }
 
-        viewModel.sendMessageStatus.observe(viewLifecycleOwner) { result ->
+        chatViewModel.sendMessageStatus.observe(viewLifecycleOwner) { result ->
             when (result.status) {
                 Status.ERROR -> {
                     Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()

@@ -121,10 +121,10 @@
                 android:layout_marginStart="8dp"
                 android:background="@drawable/circular_button_background"
                 android:src="@drawable/ic_send"
-                android:tint="#FFFFFF"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="#FFFFFF" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>

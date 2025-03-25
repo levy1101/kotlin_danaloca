@@ -60,18 +60,52 @@ class CreatePostActivity : AppCompatActivity() {
     private val pickImage = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let {
-            try {
-                contentResolver.openInputStream(it)?.use { stream ->
-                    selectedImage = BitmapFactory.decodeStream(stream)
-                    imagePreview.setImageBitmap(selectedImage)
-                    imagePreview.visibility = View.VISIBLE
+        uri?.let { startCrop(it) }
+    }
+
+    private val cropImage = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val resultUri = result.data?.let { com.yalantis.ucrop.UCrop.getOutput(it) }
+            resultUri?.let {
+                try {
+                    contentResolver.openInputStream(it)?.use { stream ->
+                        selectedImage = BitmapFactory.decodeStream(stream)
+                        imagePreview.setImageBitmap(selectedImage)
+                        imagePreview.visibility = View.VISIBLE
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Toast.makeText(this, "Failed to load cropped image", Toast.LENGTH_SHORT).show()
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show()
             }
+        } else if (result.resultCode == com.yalantis.ucrop.UCrop.RESULT_ERROR) {
+            val error = result.data?.let { com.yalantis.ucrop.UCrop.getError(it) }
+            Toast.makeText(this, "Error cropping image: ${error?.message}", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun startCrop(sourceUri: Uri) {
+        val destinationUri = Uri.fromFile(java.io.File(cacheDir, "cropped_${System.currentTimeMillis()}.jpg"))
+        
+        val options = com.yalantis.ucrop.UCrop.Options().apply {
+            setCompressionQuality(85)
+            setHideBottomControls(false)
+            setFreeStyleCropEnabled(false)
+            setStatusBarColor(getColor(R.color.primaryColor))
+            setToolbarColor(getColor(R.color.primaryColor))
+            setToolbarTitle("Crop Image")
+        }
+
+        com.yalantis.ucrop.UCrop.of(sourceUri, destinationUri)
+            .withOptions(options)
+            .withAspectRatio(1f, 1f)
+            .withMaxResultSize(1080, 1080)
+            .getIntent(this)
+            .let { intent ->
+                cropImage.launch(intent)
+            }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
