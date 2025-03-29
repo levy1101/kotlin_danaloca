@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
+import android.widget.ImageButton
 import androidx.fragment.app.Fragment
 import com.levy.danaloca.R
 import com.levy.danaloca.view.activity.HomeActivity
@@ -18,7 +18,7 @@ class SettingsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_settings, container, false)
 
-        val logoutButton = view.findViewById<Button>(R.id.logout_button)
+        val logoutButton = view.findViewById<ImageButton>(R.id.logout_button)
         logoutButton.setOnClickListener {
             (activity as? HomeActivity)?.logout()
         }

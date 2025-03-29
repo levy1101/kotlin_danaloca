@@ -16,22 +16,16 @@ import com.levy.danaloca.model.User
 import com.levy.danaloca.utils.Resource
 import com.levy.danaloca.view.custom.FriendActionsView
 import com.levy.danaloca.viewmodel.FriendsViewModel
-import de.hdodenhof.circleimageview.CircleImageView
 
-class UserProfileFragment : PostFragment() {
+class UserProfileFragment : BaseProfileFragment() {
 
     private val friendsViewModel: FriendsViewModel by activityViewModels()
 
-    // Profile info views
     private lateinit var profileTitle: TextView
-    private lateinit var fullNameText: TextView
-    private lateinit var genderText: TextView
-    private lateinit var ageText: TextView
-    private lateinit var locationText: TextView
     private lateinit var backButton: ImageButton
     private lateinit var messageButton: ImageButton
     private lateinit var friendActions: FriendActionsView
-    private lateinit var profileImageView: CircleImageView
+    private var additionalInfoContainer: View? = null
 
     private var currentUserId: String? = null
     private var userId: String? = null
@@ -56,13 +50,7 @@ class UserProfileFragment : PostFragment() {
         return inflater.inflate(R.layout.fragment_userprofile, container, false)
     }
 
-    override fun getRecyclerViewId() = R.id.posts_recycler_view
-    override fun getSwipeRefreshId() = R.id.swipeRefreshLayout
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        // Get current user ID
         currentUserId = FirebaseAuth.getInstance().currentUser?.uid
         userId = arguments?.getString(ARG_USER_ID)
         
@@ -71,27 +59,37 @@ class UserProfileFragment : PostFragment() {
             return
         }
 
-        initProfileViews(view)
+        super.onViewCreated(view, savedInstanceState)
+        initAdditionalViews(view)
         setupFriendActions()
         setupMessageButton()
-        loadUserData()
+        hideAdditionalInfo()
     }
 
-    private fun initProfileViews(view: View) {
+    private fun hideAdditionalInfo() {
+        additionalInfoContainer?.visibility = View.GONE
+    }
+
+    private fun initAdditionalViews(view: View) {
         profileTitle = view.findViewById(R.id.profile_title)
-        fullNameText = view.findViewById(R.id.tv_user_full_name)
-        genderText = view.findViewById(R.id.tv_user_gender)
-        ageText = view.findViewById(R.id.tv_user_age)
-        locationText = view.findViewById(R.id.tv_user_location)
         backButton = view.findViewById(R.id.btn_back)
         messageButton = view.findViewById(R.id.btn_message)
         friendActions = view.findViewById(R.id.friend_actions)
-        profileImageView = view.findViewById(R.id.user_profile_image)
+        
+        val profileInfoView = view.findViewById<View>(R.id.profile_info)
+        additionalInfoContainer = profileInfoView.findViewById(R.id.ll_additional_info)
 
         backButton.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
     }
+
+    // Implement abstract methods from BaseProfileFragment
+    override fun getGenderTextId() = R.id.tv_gender
+    override fun getAgeTextId() = R.id.tv_age
+    override fun getLocationTextId() = R.id.tv_location
+    override fun getProfileImageId() = R.id.user_profile_image
+    override fun getUsernameTextId() = R.id.tv_username
 
     private fun setupMessageButton() {
         messageButton.setOnClickListener {
@@ -142,21 +140,13 @@ class UserProfileFragment : PostFragment() {
         }
     }
 
-    override fun setupSwipeRefresh() {
-        swipeRefresh.setOnRefreshListener {
-            loadUserData()
-        }
-    }
-
-    private fun loadUserData() {
+    override fun loadUserData() {
         userId?.let { id ->
-            // Get user details
             userViewModel.getUser(id)
             userViewModel.user.observe(viewLifecycleOwner) { user ->
                 user?.let { updateProfileInfo(it) }
             }
 
-            // Load friend requests to update UI state
             currentUserId?.let { currentId ->
                 friendsViewModel.loadFriendRequests(currentId)
                 friendsViewModel.friendRequests.observe(viewLifecycleOwner) { resource ->
@@ -166,12 +156,11 @@ class UserProfileFragment : PostFragment() {
                                 friendActions.updateState(user, resource.data)
                             }
                         }
-                        else -> {} // Handle other states if needed
+                        else -> {}
                     }
                 }
             }
 
-            // Observe friend operations state
             friendsViewModel.operationState.observe(viewLifecycleOwner) { result ->
                 result?.let {
                     when (it) {
@@ -180,27 +169,19 @@ class UserProfileFragment : PostFragment() {
                                 friendsViewModel.loadFriendRequests(currentId)
                             }
                         }
-                        else -> {} // Handle other states if needed
+                        else -> {}
                     }
                     friendsViewModel.resetOperationState()
                 }
             }
             
-            observePosts { posts ->
-                val userPosts = posts.filter { it.userId == id }
-                postAdapter.updatePosts(userPosts)
-            }
+            updateUserPosts(id)
         }
     }
 
-    private fun updateProfileInfo(user: User) {
+    override fun updateProfileInfo(user: User) {
+        super.updateProfileInfo(user)
         profileTitle.text = user.fullName
-        fullNameText.text = user.fullName.ifBlank { "Not set" }
-        genderText.text = user.gender.ifBlank { "Not set" }
-        ageText.text = user.age.ifBlank { "Not set" }
-        locationText.text = user.location.ifBlank { "Not set" }
-
-        // Load profile image using GlideUtils
         GlideUtils.loadProfileImage(profileImageView, user.avatarUrl)
     }
 }
