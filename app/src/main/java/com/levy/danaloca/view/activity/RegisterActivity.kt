@@ -6,10 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.animation.AlphaAnimation
-import android.widget.Button
-import android.widget.DatePicker
-import android.widget.ProgressBar
-import android.widget.TextView
+import android.widget.*
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
@@ -29,16 +26,12 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var emailLayout: TextInputLayout
     private lateinit var phoneLayout: TextInputLayout
     private lateinit var fullNameLayout: TextInputLayout
-    private lateinit var genderLayout: TextInputLayout
     private lateinit var locationLayout: TextInputLayout
-    private lateinit var ageLayout: TextInputLayout
     private lateinit var passwordLayout: TextInputLayout
     private lateinit var emailField: TextInputEditText
     private lateinit var phoneField: TextInputEditText
     private lateinit var fullNameField: TextInputEditText
-    private lateinit var genderField: TextInputEditText
     private lateinit var locationField: TextInputEditText
-    private lateinit var ageField: TextInputEditText
     private lateinit var passwordField: TextInputEditText
     private lateinit var welcomeText: TextView
     private lateinit var progressBar: ProgressBar
@@ -61,17 +54,13 @@ class RegisterActivity : AppCompatActivity() {
         emailLayout = findViewById(R.id.email_layout)
         phoneLayout = findViewById(R.id.phone_layout)
         fullNameLayout = findViewById(R.id.full_name_layout)
-        genderLayout = findViewById(R.id.gender_layout)
         locationLayout = findViewById(R.id.location_layout)
-        ageLayout = findViewById(R.id.age_layout)
         passwordLayout = findViewById(R.id.password_layout)
         
         emailField = findViewById(R.id.email)
         phoneField = findViewById(R.id.phone)
         fullNameField = findViewById(R.id.full_name)
-        genderField = findViewById(R.id.gender)
         locationField = findViewById(R.id.location)
-        ageField = findViewById(R.id.age)
         passwordField = findViewById(R.id.password)
         
         progressBar = findViewById(R.id.progress_bar)
@@ -96,22 +85,30 @@ class RegisterActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         val birthdatePicker = findViewById<DatePicker>(R.id.birthdate)
-        birthdatePicker.setOnDateChangedListener { _, year, month, dayOfMonth ->
-            val calendar = Calendar.getInstance()
-            calendar.set(year, month, dayOfMonth)
-            val age = calculateAge(calendar.timeInMillis)
-            ageField.setText(age.toString())
+        // Initialize date picker with current date
+        birthdatePicker.init(birthdatePicker.year, birthdatePicker.month, birthdatePicker.dayOfMonth) { _, _, _, _ ->
+            // Date changed
         }
 
         registerButton.setOnClickListener {
             val email = emailField.text.toString().trim()
             val phone = phoneField.text.toString().trim()
             val fullName = fullNameField.text.toString().trim()
-            val gender = genderField.text.toString().trim()
             val location = locationField.text.toString().trim()
             val password = passwordField.text.toString()
             val birthdate = "${birthdatePicker.dayOfMonth}/${birthdatePicker.month + 1}/${birthdatePicker.year}"
-            val age = ageField.text.toString().trim()
+            val age = calculateAge(Calendar.getInstance().apply {
+                set(birthdatePicker.year, birthdatePicker.month, birthdatePicker.dayOfMonth)
+            }.timeInMillis).toString()
+
+            // Get selected gender
+            val selectedGenderId = findViewById<RadioGroup>(R.id.gender_group).checkedRadioButtonId
+            val gender = when (selectedGenderId) {
+                R.id.male -> "Male"
+                R.id.female -> "Female"
+                R.id.other -> "Others"
+                else -> ""
+            }
 
             if (validateInput(email, password, phone, fullName, gender, location, age)) {
                 registerUser(email, password, phone, fullName, gender, location, birthdate, age)
@@ -150,9 +147,7 @@ class RegisterActivity : AppCompatActivity() {
             passwordLayout,
             phoneLayout,
             fullNameLayout,
-            genderLayout,
-            locationLayout,
-            ageLayout
+            locationLayout
         )
 
         fields.forEachIndexed { index, view ->
@@ -177,7 +172,7 @@ class RegisterActivity : AppCompatActivity() {
         return age
     }
 
-    private fun validateInput(email: String, password: String, phone: String, fullName: String, gender: String, location: String, age: String): Boolean {
+    private fun validateInput(email: String, password: String, phone: String, fullName: String, gender: String, location: String, age: String?): Boolean {
         var isValid = true
 
         if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
@@ -209,10 +204,8 @@ class RegisterActivity : AppCompatActivity() {
         }
 
         if (gender.isEmpty()) {
-            genderLayout.error = "Enter your gender"
+            Toast.makeText(this, "Please select a gender", Toast.LENGTH_SHORT).show()
             isValid = false
-        } else {
-            genderLayout.error = null
         }
 
         if (location.isEmpty()) {
@@ -220,13 +213,6 @@ class RegisterActivity : AppCompatActivity() {
             isValid = false
         } else {
             locationLayout.error = null
-        }
-
-        if (age.isEmpty()) {
-            ageLayout.error = "Age is required"
-            isValid = false
-        } else {
-            ageLayout.error = null
         }
 
         return isValid

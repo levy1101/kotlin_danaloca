@@ -1,0 +1,34 @@
+{
+  "mcpServers": {
+    "Framelink Figma MCP": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "C:\\Users\\AnhDuc\\AppData\\Roaming\\npm\\npx",
+        "-y",
+        "figma-developer-mcp",
+        "--figma-api-key=figd_Z8RWYM_8p3daUMVUsnI2nI09dgMvJWRnAkbFAx_8",
+        "--stdio"
+      ],
+      "disabled": false,
+      "alwaysAllow": [
+        "get_figma_data"
+      ]
+    },
+    "Figma Context MCP Low token": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "C:\\Users\\AnhDuc\\AppData\\Roaming\\npm\\npx",
+        "-y",
+        "figma-mcp",
+        "--figma-api-key=figd_Z8RWYM_8p3daUMVUsnI2nI09dgMvJWRnAkbFAx_8",
+        "--stdio"
+      ],
+      "disabled": true,
+      "alwaysAllow": [
+        "add_figma_file"
+      ]
+    }
+  }
+}
