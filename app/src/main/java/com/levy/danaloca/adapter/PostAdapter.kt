@@ -95,7 +95,6 @@ class PostAdapter(
         private val commentCount: TextView = itemView.findViewById(R.id.commentCount)
         private val likeButton: View = itemView.findViewById(R.id.likeButton)
         private val commentButton: View = itemView.findViewById(R.id.commentButton)
-        private val moreButton: ImageButton = itemView.findViewById(R.id.moreButton)
         private val likeIcon: ImageView = itemView.findViewById(R.id.likeIcon)
         private val postImage: ImageView = itemView.findViewById(R.id.postImage)
         private val locationIcon: ImageView = itemView.findViewById(R.id.locationIcon)
@@ -197,9 +196,6 @@ class PostAdapter(
                 listener?.onCommentClicked(post)
             }
 
-            moreButton.setOnClickListener {
-                listener?.onMoreClicked(post)
-            }
 
             if (post.latitude != null && post.longitude != null) {
                 itemView.setOnLongClickListener {

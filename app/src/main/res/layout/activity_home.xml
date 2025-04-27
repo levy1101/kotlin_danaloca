@@ -22,6 +22,8 @@
         android:layout_gravity="bottom"
         android:background="@android:color/transparent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:cbn_elevation="10dp"/>
+        app:cbn_elevation="10dp"
+        app:cbn_fabBg="#FFF1F8"
+        app:cbn_bg="#F2E7DA"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

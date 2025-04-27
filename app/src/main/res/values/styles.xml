@@ -23,7 +23,7 @@
 
     <style name="RoundedImageView" parent="ShapeAppearance.MaterialComponents.SmallComponent">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">12dp</item>
+        <item name="cornerSize">30dp</item>
     </style>
 
     <style name="DatePickerStyle" parent="Theme.MaterialComponents.Light.Dialog">
