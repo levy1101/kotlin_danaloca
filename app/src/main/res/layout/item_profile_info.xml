@@ -4,23 +4,27 @@
     android:id="@+id/info_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp">
+    app:cardCornerRadius="24dp"
+    app:cardElevation="4dp"
+    app:cardMaxElevation="4dp"
+    app:cardPreventCornerOverlap="true"
+    app:cardUseCompatPadding="true"
+    app:cardBackgroundColor="#FFEED5">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp"
-        >
+        android:padding="20dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:text="Personal Information"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textSize="16sp"
+            android:textColor="#5E2E2E"
+            android:fontFamily="@font/poppins_bold" />
 
         <LinearLayout
             android:id="@+id/ll_gender"
@@ -34,13 +38,18 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
                 android:text="Gender:"
-                android:textStyle="bold" />
+                android:textColor="#5E2E2E"
+                android:fontFamily="@font/poppins_bold"
+                android:textSize="13sp" />
 
             <TextView
                 android:id="@+id/tv_gender"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Loading..." />
+                android:text="Loading..."
+                android:textColor="#995E2E2E"
+                android:fontFamily="@font/poppins_medium"
+                android:textSize="13sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -55,13 +64,18 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
                 android:text="Age:"
-                android:textStyle="bold" />
+                android:textColor="#5E2E2E"
+                android:fontFamily="@font/poppins_bold"
+                android:textSize="13sp" />
 
             <TextView
                 android:id="@+id/tv_age"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Loading..." />
+                android:text="Loading..."
+                android:textColor="#995E2E2E"
+                android:fontFamily="@font/poppins_medium"
+                android:textSize="13sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -76,13 +90,18 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
                 android:text="Location:"
-                android:textStyle="bold" />
+                android:textColor="#5E2E2E"
+                android:fontFamily="@font/poppins_bold"
+                android:textSize="13sp" />
 
             <TextView
                 android:id="@+id/tv_location"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Loading..." />
+                android:text="Loading..."
+                android:textColor="#995E2E2E"
+                android:fontFamily="@font/poppins_medium"
+                android:textSize="13sp" />
         </LinearLayout>
 
         <!-- Additional fields for MyProfile -->
@@ -104,13 +123,18 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
                     android:text="Email:"
-                    android:textStyle="bold" />
+                    android:textColor="#5E2E2E"
+                    android:fontFamily="@font/poppins_bold"
+                    android:textSize="13sp" />
 
                 <TextView
                     android:id="@+id/tv_email"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Loading..." />
+                    android:text="Loading..."
+                    android:textColor="#995E2E2E"
+                    android:fontFamily="@font/poppins_medium"
+                    android:textSize="13sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -124,13 +148,18 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
                     android:text="Phone:"
-                    android:textStyle="bold" />
+                    android:textColor="#5E2E2E"
+                    android:fontFamily="@font/poppins_bold"
+                    android:textSize="13sp" />
 
                 <TextView
                     android:id="@+id/tv_phone_number"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Loading..." />
+                    android:text="Loading..."
+                    android:textColor="#995E2E2E"
+                    android:fontFamily="@font/poppins_medium"
+                    android:textSize="13sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -143,13 +172,18 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
                     android:text="Birth date:"
-                    android:textStyle="bold" />
+                    android:textColor="#5E2E2E"
+                    android:fontFamily="@font/poppins_bold"
+                    android:textSize="13sp" />
 
                 <TextView
                     android:id="@+id/tv_birthdate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Loading..." />
+                    android:text="Loading..."
+                    android:textColor="#995E2E2E"
+                    android:fontFamily="@font/poppins_medium"
+                    android:textSize="13sp" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

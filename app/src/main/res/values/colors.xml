@@ -11,11 +11,11 @@
     <color name="transparent">#00000000</color>
 
     <!-- Custom theme colors -->
-    <color name="primaryColor">#1976D2</color>
-    <color name="primaryDarkColor">#1565C0</color>
+    <color name="primaryColor">#DEAEBE</color>
+    <color name="primaryDarkColor">#DEAEBE</color>
     <color name="onPrimaryColor">#FFFFFF</color>
-    <color name="secondaryColor">#FF4081</color>
-    <color name="secondaryDarkColor">#F50057</color>
+    <color name="secondaryColor">#A8CFD9</color>
+    <color name="secondaryDarkColor">#A8CFD9</color>
     <color name="onSecondaryColor">#FFFFFF</color>
     <color name="backgroundColor">#FFFFFF</color>
     <color name="surfaceColor">#FFFFFF</color>
@@ -29,4 +29,8 @@
     <color name="gray_100">#EEEEEE</color>
     <color name="gray_200">#E0E0E0</color>
     <color name="gray_800">#424242</color>
+    
+    <!-- Social button colors -->
+    <color name="primary_08">#14B5D8FF</color>
+    <color name="primary_20">#33B5D8FF</color>
 </resources>

@@ -25,7 +25,7 @@
         "--figma-api-key=figd_Z8RWYM_8p3daUMVUsnI2nI09dgMvJWRnAkbFAx_8",
         "--stdio"
       ],
-      "disabled": true,
+      "disabled": false,
       "alwaysAllow": [
         "add_figma_file"
       ]

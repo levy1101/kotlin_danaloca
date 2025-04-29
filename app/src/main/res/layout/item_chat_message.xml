@@ -18,30 +18,48 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:visibility="visible">
 
-        <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/sender_avatar"
+        <androidx.cardview.widget.CardView
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:src="@drawable/default_avatar"
-            app:civ_border_color="#EEEEEE"
-            app:civ_border_width="1dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
             android:layout_marginEnd="8dp"
-            android:layout_marginTop="4dp"/>
+            android:layout_marginTop="4dp"
+            app:cardBackgroundColor="#FFEED5">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/sender_avatar"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/default_avatar"
+                app:civ_border_color="#5E2E2E"
+                app:civ_border_width="1dp" />
+        </androidx.cardview.widget.CardView>
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/received_message_text"
+            <androidx.cardview.widget.CardView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_message"
-                android:maxWidth="260dp"
-                android:textColor="#000000"
-                android:textSize="14sp"
-                tools:text="This is a received message" />
+                app:cardCornerRadius="18dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFEED5">
+
+                <TextView
+                    android:id="@+id/received_message_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxWidth="260dp"
+                    android:padding="12dp"
+                    android:textColor="#5E2E2E"
+                    android:fontFamily="@font/poppins_medium"
+                    android:textSize="14sp"
+                    tools:text="This is a received message" />
+
+            </androidx.cardview.widget.CardView>
 
             <TextView
                 android:id="@+id/received_time"
@@ -49,7 +67,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:layout_marginTop="2dp"
-                android:textColor="#757575"
+                android:textColor="#995E2E2E"
+                android:fontFamily="@font/poppins_medium"
                 android:textSize="10sp"
                 tools:text="10:30 AM" />
         </LinearLayout>
@@ -66,15 +85,25 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:visibility="visible">
 
-        <TextView
-            android:id="@+id/sent_message_text"
+        <androidx.cardview.widget.CardView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_message"
-            android:maxWidth="260dp"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            tools:text="This is a sent message" />
+            app:cardCornerRadius="18dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#5E2E2E">
+
+            <TextView
+                android:id="@+id/sent_message_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxWidth="260dp"
+                android:padding="12dp"
+                android:textColor="#FFEED5"
+                android:fontFamily="@font/poppins_medium"
+                android:textSize="14sp"
+                tools:text="This is a sent message" />
+
+        </androidx.cardview.widget.CardView>
 
         <TextView
             android:id="@+id/sent_time"
@@ -83,7 +112,8 @@
             android:layout_gravity="end"
             android:layout_marginEnd="4dp"
             android:layout_marginTop="2dp"
-            android:textColor="#757575"
+            android:textColor="#995E2E2E"
+            android:fontFamily="@font/poppins_medium"
             android:textSize="10sp"
             tools:text="10:30 AM" />
     </LinearLayout>

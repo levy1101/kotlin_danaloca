@@ -72,16 +72,12 @@ class UserProfileFragment : BaseProfileFragment() {
 
     private fun initAdditionalViews(view: View) {
         profileTitle = view.findViewById(R.id.profile_title)
-        backButton = view.findViewById(R.id.btn_back)
         messageButton = view.findViewById(R.id.btn_message)
         friendActions = view.findViewById(R.id.friend_actions)
         
         val profileInfoView = view.findViewById<View>(R.id.profile_info)
         additionalInfoContainer = profileInfoView.findViewById(R.id.ll_additional_info)
 
-        backButton.setOnClickListener {
-            parentFragmentManager.popBackStack()
-        }
     }
 
     // Implement abstract methods from BaseProfileFragment

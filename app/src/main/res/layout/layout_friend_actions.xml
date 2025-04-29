@@ -1,31 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/buttonContainer"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:layout_gravity="center">
 
     <!-- Add Friend Button -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnAddFriend"
+        style="@style/FriendActionButton"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_height="36dp"
+        android:layout_gravity="center"
         android:text="@string/add_friend"
-        android:textSize="12sp"
-        android:visibility="gone"
-        app:cornerRadius="20dp" />
+        android:visibility="gone" />
 
     <!-- Cancel Request Button -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnCancelRequest"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        style="@style/FriendActionButtonOutlined"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_height="36dp"
+        android:layout_gravity="center"
         android:text="@string/cancel_request"
-        android:textSize="12sp"
-        android:visibility="gone"
-        app:cornerRadius="20dp" />
+        android:visibility="gone" />
 
     <!-- Accept/Decline Container -->
     <LinearLayout
@@ -33,38 +32,34 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:layout_gravity="center"
+        android:gravity="center"
         android:visibility="gone">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAccept"
+            style="@style/FriendActionButton"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="36dp"
             android:layout_marginEnd="8dp"
-            android:text="@string/accept"
-            android:textSize="12sp"
-            app:cornerRadius="20dp" />
+            android:text="@string/accept" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnDecline"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            style="@style/FriendActionButtonOutlined"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:text="Decline"
-            android:textSize="12sp"
-            app:cornerRadius="20dp" />
+            android:layout_height="36dp"
+            android:text="Decline" />
     </LinearLayout>
 
     <!-- Friends Dropdown -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnFriendOptions"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        style="@style/FriendActionButtonOutlined"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_height="36dp"
+        android:layout_gravity="center"
         android:text="@string/following"
-        android:textSize="12sp"
-        android:visibility="gone"
-        app:cornerRadius="20dp"
-        app:strokeColor="#757575"
-        app:strokeWidth="1dp" />
+        android:visibility="gone" />
 
 </FrameLayout>
