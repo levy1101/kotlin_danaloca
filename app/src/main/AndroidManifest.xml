@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.levy.danaloca">
 
     <application
@@ -58,7 +59,11 @@
             android:name=".view.activity.MapLocationActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
-
+        <activity
+            android:name=".view.fragment.SettingsFragment"
+            android:windowSoftInputMode="adjustResize"
+            tools:ignore="Instantiatable">
+        </activity>
         <!-- Firebase Cloud Messaging Service -->
         <service
             android:name=".service.MyFirebaseMessagingService"

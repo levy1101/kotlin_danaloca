@@ -27,13 +27,11 @@ class SettingsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_settings, container, false)
 
-        // Setup logout button
         val logoutButton = view.findViewById<ImageButton>(R.id.logout_button)
         logoutButton.setOnClickListener {
             (activity as? HomeActivity)?.logout()
         }
 
-        // Setup WebView
         webView = view.findViewById(R.id.coze_webview)
         webView.settings.apply {
             javaScriptEnabled = true
@@ -45,18 +43,21 @@ class SettingsFragment : Fragment() {
             builtInZoomControls = false
             displayZoomControls = false
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-            defaultTextEncodingName = "utf-8"
+            userAgentString = WebSettings.getDefaultUserAgent(context) + " Mobile" // Thêm User-Agent
         }
 
+        WebView.setWebContentsDebuggingEnabled(true)
+
         webView.webViewClient = object : WebViewClient() {
-            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
-                super.onReceivedError(view, request, error)
+            override fun onReceivedError(
+                view: WebView?, request: WebResourceRequest?, error: WebResourceError?
+            ) {
                 Log.e(TAG, "Error loading: ${error?.description}")
+                // Hiển thị thông báo lỗi hoặc giao diện fallback
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
-                super.onPageFinished(view, url)
-                Log.d(TAG, "Page loaded successfully: $url")
+                Log.d(TAG, "Page loaded: $url")
             }
         }
 
@@ -67,28 +68,9 @@ class SettingsFragment : Fragment() {
             }
         }
 
-        try {
-            // Load HTML content from raw resource
-            val inputStream = resources.openRawResource(R.raw.chat)
-            val reader = BufferedReader(InputStreamReader(inputStream))
-            val htmlContent = reader.readLines().joinToString("\n")
-            reader.close()
-            
-            // Load with base URL to allow loading external resources
-            webView.loadDataWithBaseURL(
-                "https://sf-cdn.coze.com",
-                htmlContent,
-                "text/html",
-                "UTF-8",
-                null
-            )
-            
-            Log.d(TAG, "HTML content loaded successfully")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error loading HTML: ${e.message}")
-            e.printStackTrace()
-        }
 
+        // Tải GitHub Pages
+        webView.loadUrl("https://levy1101.github.io/coze-chat/")
         return view
     }
 
@@ -98,3 +80,5 @@ class SettingsFragment : Fragment() {
         webView.clearHistory()
     }
 }
+
+
