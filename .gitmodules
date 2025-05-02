@@ -1,0 +1,3 @@
+[submodule "app/src/main/assets/coze-chat"]
+	path = app/src/main/assets/coze-chat
+	url = https://github.com/levy1101/coze-chat.git
