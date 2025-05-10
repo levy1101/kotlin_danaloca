@@ -19,9 +19,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="48dp"
-            android:fontFamily="@font/poppins_bold"
+            android:fontFamily="cursive"
+            android:text="Let's Join Us!"
             android:textColor="#5E2E2E"
-            android:textSize="20sp"
+            android:textSize="40sp"
             android:letterSpacing="-0.02"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -32,35 +33,34 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins_semibold"
-            android:text="Welcome to Danaloca"
+            android:text="Create a new account"
             android:textColor="#5E2E2E"
             android:textSize="14sp"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="16dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/welcome_text" />
+            app:layout_constraintTop_toBottomOf="@id/logo_image" />
 
-        <androidx.cardview.widget.CardView
+        <ImageView
+            android:id="@+id/logo_image"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginTop="16dp"
+            android:src="@drawable/logo"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/welcome_text"
+            android:contentDescription="Logo"/>        
+
+        <LinearLayout
             android:id="@+id/input_container"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp"
             android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="32dp"
-            app:cardCornerRadius="32dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="#C8EFFF"
-            app:cardMaxElevation="4dp"
-            app:cardPreventCornerOverlap="true"
-            app:cardUseCompatPadding="true"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="20dp"
             app:layout_constraintTop_toBottomOf="@id/welcome_subtitle">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="18dp">
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/full_name_layout"
@@ -260,7 +260,6 @@
                         android:background="@drawable/bg_input_with_shadow" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
-        </androidx.cardview.widget.CardView>
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/register_button"

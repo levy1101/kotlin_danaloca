@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
 
         // Initialize views
         val logo = findViewById<ImageView>(R.id.app_logo)
-        val title = findViewById<TextView>(R.id.app_title)
+//        val title = findViewById<TextView>(R.id.app_title)
         val animationView = findViewById<LottieAnimationView>(R.id.loading_animation)
 
         // Setup animations
@@ -45,8 +45,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Start animations
-        logo.startAnimation(fadeIn)
-        title.startAnimation(fadeInDelayed)
+//        logo.startAnimation(fadeIn)
+        logo.startAnimation(fadeInDelayed)
         
         // Setup Lottie animation
         animationView.setAnimation("loading_animation.json")
